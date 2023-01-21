@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'
 import mongoose, { Schema } from 'mongoose'
 const LocalStrategy = local.Strategy
 export function passportConfigBuilder (schemaObject) {
-  let crypt
+  let crypt = true
   const basicSchema = {
     username: {
       type: String,
@@ -76,3 +76,4 @@ export function passportConfigBuilder (schemaObject) {
   }
   return { initializePassport, setCrypt }
 }
+module.exports = passportConfigBuilder
