@@ -76,4 +76,4 @@ export function passportConfigBuilder (schemaObject) {
   }
   return { initializePassport, setCrypt }
 }
-module.exports = passportConfigBuilder
+export default passportConfigBuilder
