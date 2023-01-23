@@ -2,9 +2,22 @@ import passport from 'passport'
 import local from 'passport-local'
 import bcrypt from 'bcrypt'
 import mongoose, { Schema } from 'mongoose'
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 const LocalStrategy = local.Strategy
 export function passportConfigBuilder (schemaObject) {
   let crypt = true
+  let googleAuthModel
+  const googleAuthSchema = new Schema({
+    username: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    name: String,
+    lastName: String,
+    avatar: String
+  })
+  googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema)
   const basicSchema = {
     username: {
       type: String,
@@ -25,7 +38,7 @@ export function passportConfigBuilder (schemaObject) {
   const isValid = (user, password) => bcrypt.compareSync(password, user.password)
 
   const users = mongoose.model('users', new Schema(finalSchema))
-  const initializePassport = () => {
+  function initializePassport () {
     passport.use(
       'register',
       new LocalStrategy(
@@ -73,7 +86,41 @@ export function passportConfigBuilder (schemaObject) {
         }
       )
     )
+    return this
   }
-  return { initializePassport, setCrypt }
+  function GoogleoAuth (authObject, loginOnly = false) {
+    const justLogin = async (accessToken, refreshToken, profile, email, cb) => {
+      try {
+        googleAuthModel = users
+        const resultado = await googleAuthModel.findOne({ username: email.emails[0].value })
+        if (resultado) {
+          return cb(null, resultado)
+        }
+      //  return cb(new Error('User not found'), false)
+      } catch (err) { return cb(err) }
+    }
+    const loginAndregister = async (accessToken, refreshToken, profile, email, cb) => {
+      try {
+        const resultado = await googleAuthModel.findOne({ username: email.emails[0].value })
+        if (resultado) {
+          return cb(null, resultado)
+        }
+        try {
+          const usercreated = await googleAuthModel.create({ username: email.emails[0].value, password: email.id, name: email.name.givenName, lastname: email.name.familyName, avatar: email.photos[0].value })
+          return cb(null, usercreated)
+        } catch (err) { return cb(err) }
+      } catch (err) { return cb(err) }
+    }
+    passport.use(new GoogleStrategy(authObject,
+      (loginOnly) ? justLogin : loginAndregister))
+    passport.serializeUser((user, done) => {
+      done(null, user._id)
+    })
+    passport.deserializeUser((id, done) => {
+      googleAuthModel.findById(id, done)
+    })
+    return this
+  }
+  return { initializePassport, setCrypt, GoogleoAuth }
 }
 export default passportConfigBuilder
