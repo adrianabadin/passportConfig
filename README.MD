@@ -212,4 +212,9 @@ passportConfigBuilder({})
 
 I hope you find this package usefull, i belive that it adds value to the implementation of most case scenarios of the passport JS framework.
 
+## Version Updates
+
+1. Transpiled code to ES2015 standard allowing imports and require statements
+2. Flash messages implemented on the failure branch.
+
 Thanks for your time.

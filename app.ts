@@ -4,9 +4,9 @@ import bcrypt from 'bcrypt'
 import mongoose, { Schema } from 'mongoose'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 const LocalStrategy = local.Strategy
-export function passportConfigBuilder (schemaObject) {
+export function passportConfigBuilder (schemaObject:any) {
   let crypt = true
-  let googleAuthModel
+  let googleAuthModel: any
   const googleAuthSchema = new Schema({
     username: {
       type: String,
@@ -30,12 +30,12 @@ export function passportConfigBuilder (schemaObject) {
     }
   }
   const finalSchema = { ...schemaObject, ...basicSchema }
-  function setCrypt (value) {
+  function setCrypt (value:boolean) {
     crypt = value
     return this
   }
-  const createHash = password => bcrypt.hashSync(password, bcrypt.genSaltSync(10))
-  const isValid = (user, password) => bcrypt.compareSync(password, user.password)
+  const createHash = (password:string) => bcrypt.hashSync(password, bcrypt.genSaltSync(10))
+  const isValid = (user:any, password:string) => bcrypt.compareSync(password, user.password)
 
   const users = mongoose.model('users', new Schema(finalSchema))
   function initializePassport () {
@@ -64,7 +64,7 @@ export function passportConfigBuilder (schemaObject) {
         })
     )
 
-    passport.serializeUser((user, done) => {
+    passport.serializeUser((user:any, done) => {
       done(null, user._id)
     })
     passport.deserializeUser((id, done) => {
@@ -77,8 +77,8 @@ export function passportConfigBuilder (schemaObject) {
         async (username, password, done) => {
           try {
             const user = await users.findOne({ username })
-            if (!user) return done(null, false)
-            if (!isValid(user, password)) return done(null, false)
+            if (!user) return done(null, false,{type: 'error', message:`User ${username} doesnt exist` } as any)
+            if (!isValid(user, password)) return done(null, false,{type: 'error', message:`Wrong Password`  } as any)
             return done(null, user)
           } catch (err) {
             done(err)
@@ -88,18 +88,18 @@ export function passportConfigBuilder (schemaObject) {
     )
     return this
   }
-  function GoogleoAuth (authObject, loginOnly = false) {
-    const justLogin = async (accessToken, refreshToken, profile, email, cb) => {
+  function GoogleoAuth (authObject:any, loginOnly = false) {
+    const justLogin = async (_accessToken:any, _refreshToken:any, _profile:any, email:any, cb:any) => {
       try {
         googleAuthModel = users
         const resultado = await googleAuthModel.findOne({ username: email.emails[0].value })
         if (resultado) {
           return cb(null, resultado)
         }
-      //  return cb(new Error('User not found'), false)
+        return cb(null, false,{type: 'error', message:`User ${email.emails[0].value} does not exist`})
       } catch (err) { return cb(err) }
     }
-    const loginAndregister = async (accessToken, refreshToken, profile, email, cb) => {
+    const loginAndregister = async (_accessToken:any, _refreshToken:any, _profile:any, email:any, cb:any) => {
       try {
         const resultado = await googleAuthModel.findOne({ username: email.emails[0].value })
         if (resultado) {
@@ -113,7 +113,7 @@ export function passportConfigBuilder (schemaObject) {
     }
     passport.use(new GoogleStrategy(authObject,
       (loginOnly) ? justLogin : loginAndregister))
-    passport.serializeUser((user, done) => {
+    passport.serializeUser((user:any, done) => {
       done(null, user._id)
     })
     passport.deserializeUser((id, done) => {
