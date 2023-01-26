@@ -3,7 +3,7 @@
 ## Installation:
 
 ```bash
-npm install passportmongoconfigurator
+npm install passport-fast-config
 ```
 
 ## Implementation:
@@ -37,25 +37,14 @@ const app = express();
 app.listen(8080, () => console.log("Server Up"));
 ```
 
-Now we will open a Mongo Db Connection to guarantee the persistence of the login and register data:
-
-```javascript
-mongoose.set("strictQuery", true);
-mongoose.connect("connection string", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-```
-
 At this time we need to initialize the express session middleware:
 
 ```javascript
 const baseSession = session({
   store: MongoStore.create({
-    mongoUrl:
-      "mongodb+srv://dcsweb:1234@dcsweb.snm3hyr.mongodb.net/?retryWrites=true&w=majority",
+    mongoUrl: "connection-string",
   }),
-  secret: "c0d3r",
+  secret: "password",
   resave: true,
   saveUninitialized: true,
 });
@@ -101,7 +90,10 @@ To call the implementation of our configuration you need to call the method **in
 So the basic configuration for this implementation would be :
 
 ```javascript
-passportConfigBuilder({}).initializePassport();
+passportConfigBuilder(
+  {},
+  "connection string for mongo DB"
+).initializePassport();
 ```
 
 And if you need other fields on the login form you should do this:

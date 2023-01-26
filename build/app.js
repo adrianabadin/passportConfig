@@ -42,7 +42,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const mongoose_1 = __importStar(require("mongoose"));
 const passport_google_oauth20_1 = require("passport-google-oauth20");
 const LocalStrategy = passport_local_1.default.Strategy;
-function passportConfigBuilder(schemaObject) {
+function passportConfigBuilder(schemaObject, url) {
     let crypt = true;
     let googleAuthModel;
     const googleAuthSchema = new mongoose_1.Schema({
@@ -118,6 +118,13 @@ function passportConfigBuilder(schemaObject) {
                 done(err);
             }
         })));
+        passport_1.default.serializeUser((username, done) => {
+            console.log(username);
+            done(null, username);
+        });
+        passport_1.default.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
+            yield users.findOne({ id }, done);
+        }));
         return this;
     }
     function GoogleoAuth(authObject, loginOnly = false) {
