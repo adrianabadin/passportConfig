@@ -17,7 +17,9 @@ This way, at this moment you can implement Local Strategy and google oAuth 2.0 b
 The package was builded using ECS modules.
 
 ```javascript
-import passportconfigurator from "passportmongoconfigurator";
+import {passportConfigBuilder} from "passport-fast-config";
+o
+const passportConfigBuilder = require("passport-fast-config)
 ```
 
 Once you have imported the package you should implement your standard server configuration, we will start importing the rest of the dependences needed for the server
@@ -146,6 +148,16 @@ app.post("/failedLogin", (req, res) => {
 ```
 
 So at this point the objective of this package is clearly avoid the boilerplate code needed to instantiate a login/register using passport Local Strategy. Of course the traditional implementation allows a fine tune not provided by this library, but in the habitual scenarios it should be a great tool to use.
+
+### Other spects of passportConfigBuilder function
+
+The function returns 5 elements:
+
+1. _initializePassport_ *method* (explained above)
+2. _setCrypt_ *method* sets on or off the password encryption. True by default encripts the password
+3. _GoogleoAuth_ *method* configures the data required for google oAuth authentication (explained above)
+4. _users Access_ the user model of the mongo database
+5. _googleAuthModel_ Acces the googleAuth users model of the mongo database
 
 ### Google oAuth 2.0 Strategy for passport JS
 

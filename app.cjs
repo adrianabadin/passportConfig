@@ -63,10 +63,10 @@ function passportConfigBuilder (schemaObject, mongoUrl) {
               const result = await users.create(newUser)
               return done(null, result)
             } catch (err) {
-              done(err)
+              done(err,null,{message:"Imposible to register new user"})
             }
           } catch (err) {
-            done(err)
+            done(err,null,{message:"Imposible to register new user"})
           }
         })
     )
@@ -84,7 +84,7 @@ function passportConfigBuilder (schemaObject, mongoUrl) {
             const user = await users.findOne({ username })
             if (!user) return done(null, false, { message: `User ${username} not found` })
             if (!isValid(user, password)) return done(null, false, { message: `Password provided doesnt match the one stored for ${username}` })
-            return done(null, user)
+            return done(null, user,{message: `User ${username} successfully loged`})
           } catch (err) {
             done(err)
           }
@@ -103,7 +103,7 @@ function passportConfigBuilder (schemaObject, mongoUrl) {
           return cb(null, resultado)
         }
         return cb(null, false, { message: `User ${email.emails[0].value} not found` })
-      } catch (err) { return cb(err) }
+      } catch (err) { return cb(err,null,{message:"Error login user"}) }
     }
     const loginAndregister = async (accessToken, refreshToken, profile, email, cb) => {
       try {
@@ -114,8 +114,8 @@ function passportConfigBuilder (schemaObject, mongoUrl) {
         try {
           const usercreated = await googleAuthModel.create({ username: email.emails[0].value, password: email.id, name: email.name.givenName, lastname: email.name.familyName, avatar: email.photos[0].value })
           return cb(null, usercreated)
-        } catch (err) { return cb(err) }
-      } catch (err) { return cb(err) }
+        } catch (err) { return cb(err,null,{message:"Error creating user"}) }
+      } catch (err) { return cb(err,null,{message:"Error login with oAuth"}) }
     }
     passport.use(new GoogleStrategy(authObject,
       (loginOnly) ? justLogin : loginAndregister))
