@@ -1,6 +1,6 @@
 {
-  "name": "passportmongoconfigurator",
-  "version": "1.0.3b",
+  "name": "passport-fast-config",
+  "version": "1.0.2b",
   "description": "",
   "main": "./app.cjs",
   "type": "commonjs",
