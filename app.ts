@@ -1,13 +1,26 @@
-import passport from 'passport'
-import local from 'passport-local'
-import bcrypt from 'bcrypt'
-import mongoose, { Schema } from 'mongoose'
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
+import { Models,Schema as SchemaType} from "mongoose"
+import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
+import { googleUser, IpassportConfigBuilderReturn, IlocalSchema } from "./types"
+const passport =require( 'passport')
+const local=require( 'passport-local')
+const bcrypt=require( 'bcrypt')
+const mongoose=require( 'mongoose')
+const Schema=mongoose.Schema
+const GoogleStrategy=require( 'passport-google-oauth20').Strategy
 const LocalStrategy = local.Strategy
-export function passportConfigBuilder (schemaObject:any,url:string) {
+
+function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>): IpassportConfigBuilderReturn {
+//////////////////
+//variables
+/////////////////
+  let userNotFoundMessage:string 
+  let incorrectPasswordMessage:string
+  let userAlrreadyExistsMessage:string
   let crypt = true
-  let googleAuthModel: any
-  const googleAuthSchema = new Schema({
+  let googleAuthModel:any
+////////////////
+//SCHEMAS
+  const googleAuthSchema = new SchemaType<googleUser>({
     username: {
       type: String,
       required: true,
@@ -17,7 +30,6 @@ export function passportConfigBuilder (schemaObject:any,url:string) {
     lastName: String,
     avatar: String
   })
-  googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema)
   const basicSchema = {
     username: {
       type: String,
@@ -29,72 +41,93 @@ export function passportConfigBuilder (schemaObject:any,url:string) {
       required: true
     }
   }
-  const finalSchema = { ...schemaObject, ...basicSchema }
-  function setCrypt (value:boolean) {
-    crypt = value
+  schemaObject.add(basicSchema)
+/////////////////
+//MODELS
+  const users = mongoose.model('users', new Schema(schemaObject))
+  googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema)
+
+  ///////////////
+  //FUNCTIONS
+  //////////////
+  
+  ////// HELPERS////////
+  const createHash = (password:string) => bcrypt.hashSync(password, bcrypt.genSaltSync(10))
+  const isValid = (user:any, password:string) => bcrypt.compareSync(password, user.password as string)  
+  
+  /////////SETERS////////
+  function setUserNotFoundMessage(this:IpassportConfigBuilderReturn, userNotFoundParam:string){
+    userNotFoundMessage=userNotFoundParam
     return this
   }
-  const createHash = (password:string) => bcrypt.hashSync(password, bcrypt.genSaltSync(10))
-  const isValid = (user:any, password:string) => bcrypt.compareSync(password, user.password)
-  
-  const users = mongoose.model('users', new Schema(finalSchema))
-  function initializePassport () {
+  function setIncorrectPassword(this:IpassportConfigBuilderReturn, incorrectPasswordParam:string){
+
+    incorrectPasswordMessage=incorrectPasswordParam
+    return this
+  }
+  function setUserAlrreadyExistsMessage(this:IpassportConfigBuilderReturn, userExistsParam:string){
+    userAlrreadyExistsMessage =userExistsParam
+    return this
+  }
+  function setCrypt (this:IpassportConfigBuilderReturn ,value:boolean):IpassportConfigBuilderReturn {
+    crypt = value
+    return this 
+  }
+  /////////BUILDERS///////////////////
+  function buildLocalConfig (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn {
     passport.use(
       'register',
       new LocalStrategy(
         { passReqToCallback: true },
-        async (req, username, password, done) => {
+        async (req:Request, username:string, password:string, done:any) => {
           try {
             const user = await users.findOne({ username })
-            if (user) return done(null, false) // error, data
+            if (user) return done(null, false, 
+              { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` }) // error, data
             let newUser = { username, password }
             if (crypt) newUser = { username, password: createHash(password) }
-            Object.keys(schemaObject).forEach(key => {
-              newUser = { ...newUser, [key]: req.body[key] }
+            Object.keys(schemaObject).forEach((key:string) => {
+              
+              if (req.body !== undefined && req.body !==null)  {
+                const value:any =req.body[key as keyof ReadableStream<any>]
+                newUser = { ...newUser, [key]: value}}
             })
             try {
               const result = await users.create(newUser)
               return done(null, result)
             } catch (err) {
-              done(err)
+              done(err,null,{message:"Imposible to register new user"})
             }
           } catch (err) {
-            done(err)
+            done(err,null,{message:"Imposible to register new user"})
           }
         })
     )
-
-    passport.serializeUser((user:any, done) => {
+    passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
-    passport.deserializeUser((id, done) => {
+    passport.deserializeUser((id:string, done:any) => {
       users.findById(id, done)
     })
     passport.use(
       'login',
       new LocalStrategy(
-        async (username, password, done) => {
+        async (username:string, password:string, done:any) => {
           try {
             const user = await users.findOne({ username })
-            if (!user) return done(null, false,{type: 'error', message:`User ${username} doesnt exist` } as any)
-            if (!isValid(user, password)) return done(null, false,{type: 'error', message:`Wrong Password`  } as any)
-            return done(null, user)
+            if (!user) return done(null, false, { message: userNotFoundMessage || `User ${username} not found` })
+            if (!isValid(user, password)) return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` })
+            return done(null, user,{message: `User ${username} successfully loged`})
           } catch (err) {
             done(err)
           }
         }
       )
     )
-    passport.serializeUser((username:any, done) => {
-      console.log(username)
-      done(null, username)
-    })
-    passport.deserializeUser(async (id, done) => {
-      await users.findOne({id}, done)
-    })
+
     return this
   }
-  function GoogleoAuth (authObject:any, loginOnly = false) {
+  function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
     const justLogin = async (_accessToken:any, _refreshToken:any, _profile:any, email:any, cb:any) => {
       try {
         googleAuthModel = users
@@ -102,8 +135,8 @@ export function passportConfigBuilder (schemaObject:any,url:string) {
         if (resultado) {
           return cb(null, resultado)
         }
-        return cb(null, false,{type: 'error', message:`User ${email.emails[0].value} does not exist`})
-      } catch (err) { return cb(err) }
+        return cb(null, false, { message: userNotFoundMessage || `User ${email.emails[0].value} not found` })
+      } catch (err) { return cb(err,null,{message:"Error login user"}) }
     }
     const loginAndregister = async (_accessToken:any, _refreshToken:any, _profile:any, email:any, cb:any) => {
       try {
@@ -114,19 +147,19 @@ export function passportConfigBuilder (schemaObject:any,url:string) {
         try {
           const usercreated = await googleAuthModel.create({ username: email.emails[0].value, password: email.id, name: email.name.givenName, lastname: email.name.familyName, avatar: email.photos[0].value })
           return cb(null, usercreated)
-        } catch (err) { return cb(err) }
-      } catch (err) { return cb(err) }
+        } catch (err) { return cb(err,null,{message:"Error creating user"}) }
+      } catch (err) { return cb(err,null,{message:"Error login with oAuth"}) }
     }
     passport.use(new GoogleStrategy(authObject,
       (loginOnly) ? justLogin : loginAndregister))
-    passport.serializeUser((user:any, done) => {
+    passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
-    passport.deserializeUser((id, done) => {
+    passport.deserializeUser((id:string, done:any) => {
       googleAuthModel.findById(id, done)
     })
     return this
   }
-  return { initializePassport, setCrypt, GoogleoAuth }
+  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,users,googleAuthModel }
 }
-export default passportConfigBuilder
+module.exports = passportConfigBuilder

@@ -2,7 +2,7 @@
   "name": "passport-fast-config",
   "version": "1.0.2b",
   "description": "",
-  "main": "./app.cjs",
+  "main": "./app.ts",
   "type": "commonjs",
   "keywords": [],
   "author": "",
@@ -12,6 +12,7 @@
     "lint": "ts-standard",
     "build": "tsc --build"
   },
+  "types": "types.d.ts",
   "dependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/mongoose": "^5.11.97",

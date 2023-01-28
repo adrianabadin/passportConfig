@@ -60,7 +60,7 @@ app.use(baseSession);
 ```
 
 And at this time we use our package to provide configuration for Passport JS, lets start with **_<u>Local Strategy</u>_** implementation.
-We will call **passportConfigBuilder()** function, this function recives a literal object as a parameter.
+We will call **passportConfigBuilder()** function, this function recives a mongoose **Schema** as unique parameter
 
 This object is a mongo DB schema object, and its the only data needed to provide configuration for the entire strategy.
 
@@ -85,34 +85,32 @@ const basicSchema = {
 };
 ```
 
-This means that the data you provide in the configuration object will add more fields to your user registration implementation, but **user** and **password** fields have a **default** configuration set in place.
+This means that the data you provide in the configuration object will add more fields to your user registration implementation, but **username** and **password** fields have a **default** configuration set in place.
 
-To call the implementation of our configuration you need to call the method **initializePassport()**
+To call the implementation of our configuration you need to call the method **buildLocalConfig()**
 
 So the basic configuration for this implementation would be :
 
 ```javascript
-passportConfigBuilder(
-  {},
-  "connection string for mongo DB"
-).initializePassport();
+passportConfigBuilder(new Schema({})).buildLocalConfig();
 ```
 
 And if you need other fields on the login form you should do this:
 
 ```javascript
-passportConfigBuilder({
+passportConfigBuilder(Schema({
 	firstName:String,
 	lastName:String,
 	age:Number
 	email:{type:String, required:true}
-	}).initializePassport()
+	})).buildLocalConfig()
 ```
 
 This would generate 2 authentication patterns
 
 1. 'login' this is the validation login authentication strategy for passport JS
 2. 'register' this middleware is in charge of persisting the data provided by the req.body object in the database connection you have set on the top of the file.
+3. As an implementation process we will generate a **update** and a **delete** authentication pattern in the following updates
 
 After the configuration you need to initialize passport by calling:
 
@@ -153,11 +151,14 @@ So at this point the objective of this package is clearly avoid the boilerplate 
 
 The function returns 5 elements:
 
-1. _initializePassport_ *method* (explained above)
-2. _setCrypt_ *method* sets on or off the password encryption. True by default encripts the password
-3. _GoogleoAuth_ *method* configures the data required for google oAuth authentication (explained above)
-4. _users Access_ the user model of the mongo database
-5. _googleAuthModel_ Acces the googleAuth users model of the mongo database
+1. **buildLocalConfig** **method** (explained above)
+2. **setCrypt** **method** sets on or off the password encryption. True by default encripts the password
+3. **GoogleoAuth** **method** configures the data required for google oAuth authentication (explained above)
+4. **users Access** the user model of the mongo database
+5. **googleAuthModel** Acces the googleAuth users model of the mongo database
+6. **setUserNotFoundMessage** **method** sets custom error user not found message
+7. **setIncorrectPassword** **method** sets custom error for incorrect password message
+8. **setUserAlrreadyExistsMessage** **method** sets custom error for user already exists message
 
 ### Google oAuth 2.0 Strategy for passport JS
 
@@ -211,14 +212,17 @@ passportConfigBuilder({})
     },
     true
   )
-  .initializePassport();
+  .buildLocalConfig();
 ```
 
 I hope you find this package usefull, i belive that it adds value to the implementation of most case scenarios of the passport JS framework.
 
 ## Version Updates
 
-1. Transpiled code to ES2015 standard allowing imports and require statements
-2. Flash messages implemented on the failure branch.
+1. Base app.js version builded in commonjs to garantee module interoperability
+2. Flash messages implemented on the failure branch and the success branch.
+3. Typescript type definitions added to the package
+4. Typescript native module added to the package
+5. Custom message seters implemented
 
 Thanks for your time.
