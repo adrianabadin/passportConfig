@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = require("mongoose");
 const passport = require('passport');
 const local = require('passport-local');
 const bcrypt = require('bcrypt');
@@ -27,7 +28,7 @@ function passportConfigBuilder(schemaObject) {
     let googleAuthModel;
     ////////////////
     //SCHEMAS
-    const googleAuthSchema = new Schema({
+    const googleAuthSchema = new mongoose_1.Schema({
         username: {
             type: String,
             required: true,
@@ -55,6 +56,7 @@ function passportConfigBuilder(schemaObject) {
     googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema);
     ///////////////
     //FUNCTIONS
+    //////////////
     ////// HELPERS////////
     const createHash = (password) => bcrypt.hashSync(password, bcrypt.genSaltSync(10));
     const isValid = (user, password) => bcrypt.compareSync(password, user.password);
