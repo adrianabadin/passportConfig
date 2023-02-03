@@ -79,51 +79,14 @@ function passportConfigBuilder(schemaObject) {
     }
     /////////BUILDERS///////////////////
     function buildLocalConfig() {
-        passport.use('register', new LocalStrategy({ passReqToCallback: true }, (req, username, password, done) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const user = yield users.findOne({ username });
-                if (user)
-                    return done(null, false, { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` }); // error, data
-                let newUser = { username, password };
-                if (crypt)
-                    newUser = { username, password: createHash(password) };
-                Object.keys(schemaObject).forEach((key) => {
-                    if (req.body !== undefined && req.body !== null) {
-                        const value = req.body[key];
-                        newUser = Object.assign(Object.assign({}, newUser), { [key]: value });
-                    }
-                });
-                try {
-                    const result = yield users.create(newUser);
-                    return done(null, result);
-                }
-                catch (err) {
-                    done(err, null, { message: "Imposible to register new user" });
-                }
-            }
-            catch (err) {
-                done(err, null, { message: "Imposible to register new user" });
-            }
-        })));
+        registerStrategy(users, userAlrreadyExistsMessage, createHash, schemaObject, crypt);
         passport.serializeUser((user, done) => {
             done(null, user._id);
         });
         passport.deserializeUser((id, done) => {
             users.findById(id, done);
         });
-        passport.use('login', new LocalStrategy((username, password, done) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const user = yield users.findOne({ username });
-                if (!user)
-                    return done(null, false, { message: userNotFoundMessage || `User ${username} not found` });
-                if (!isValid(user, password))
-                    return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` });
-                return done(null, user, { message: `User ${username} successfully loged` });
-            }
-            catch (err) {
-                done(err);
-            }
-        })));
+        loginStrategy(users, userNotFoundMessage, incorrectPasswordMessage, isValid);
         return this;
     }
     function GoogleoAuth(authObject, loginOnly = false) {
@@ -168,5 +131,58 @@ function passportConfigBuilder(schemaObject) {
         return this;
     }
     return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, users, googleAuthModel };
+}
+function registerStrategy(users, userAlrreadyExistsMessage, createHash, schemaObject, crypt) {
+    passport.use('register', new LocalStrategy({ passReqToCallback: true }, (req, username, password, done) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const user = yield users.findOne({ username });
+            if (user)
+                return done(null, false, { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` }); // error, data
+            let newUser = loginObjectCreator(schemaObject, req);
+            if (crypt)
+                newUser = { username, password: createHash(password) };
+            // Object.keys(schemaObject.obj).forEach((key:string) => {
+            //   if (req.body !== undefined && req.body !==null)  {
+            //     const value:any =req.body[key as keyof ReadableStream<any>]
+            //     newUser = { ...newUser, [key]: value}}
+            // })
+            newUser.username = username;
+            newUser.password = crypt ? createHash(password) : password;
+            try {
+                const result = yield users.create(newUser);
+                return done(null, result);
+            }
+            catch (err) {
+                done(err, null, { message: "Imposible to register new user" });
+            }
+        }
+        catch (err) {
+            done(err, null, { message: "Imposible to register new user" });
+        }
+    })));
+}
+function loginStrategy(users, userNotFoundMessage, incorrectPasswordMessage, isValid) {
+    passport.use('login', new LocalStrategy((username, password, done) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const user = yield users.findOne({ username });
+            if (!user)
+                return done(null, false, { message: userNotFoundMessage || `User ${username} not found` });
+            if (!isValid(user, password))
+                return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` });
+            return done(null, user, { message: `User ${username} successfully loged` });
+        }
+        catch (err) {
+            done(err);
+        }
+    })));
+}
+function loginObjectCreator(users, req) {
+    let objeto;
+    Object.keys(users.obj).forEach(keyValue => {
+        if (req.body !== null && req.body[keyValue] !== undefined) {
+            objeto = Object.assign(Object.assign({}, objeto), { [keyValue]: req.body[keyValue] });
+        }
+    });
+    return objeto;
 }
 module.exports = passportConfigBuilder;
