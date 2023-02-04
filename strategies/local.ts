@@ -11,11 +11,9 @@ function registerStrategy(users:any,userAlrreadyExistsMessage:string,createHash:
           try {
             const user = await users.findOne({ username })
             if (user) return done(null, false, 
-              { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` }) // error, data
+              { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` })
             let newUser = loginObjectCreator(users,req)
-            if (crypt) newUser = { username, password: createHash(password) }
-            newUser.username=username
-            newUser.password= crypt ? createHash(password) :password
+            newUser = {...newUser, username, password: crypt ? createHash(password):password }
             try {
               const result = await users.create(newUser)
               return done(null, result)
@@ -29,7 +27,7 @@ function registerStrategy(users:any,userAlrreadyExistsMessage:string,createHash:
     )
   
   }
-  function loginStrategy(users:any,userNotFoundMessage:string,incorrectPasswordMessage:string,isValid:any){
+function loginStrategy(users:any,userNotFoundMessage:string,incorrectPasswordMessage:string,isValid:any){
     passport.use(
       'login',
       new LocalStrategy(
@@ -38,7 +36,7 @@ function registerStrategy(users:any,userAlrreadyExistsMessage:string,createHash:
             const user = await users.findOne({ username })
             if (!user) return done(null, false, { message: userNotFoundMessage || `User ${username} not found` })
             if (!isValid(user, password)) return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` })
-            
+          
             return done(null, user,{message: `User ${username} successfully loged`})
           } catch (err) {
             done(err)
@@ -50,10 +48,10 @@ function registerStrategy(users:any,userAlrreadyExistsMessage:string,createHash:
   }
   function loginObjectCreator(users:any,req:Request){
   let objeto:any 
-  Object.keys(users.obj).forEach(keyValue=>{
+  Object.keys(users.schema.obj).forEach(keyValue=>{
   if (req.body !==null && req.body[keyValue as keyof ReadableStream<any>]!==undefined){ 
     objeto={...objeto,[keyValue]:req.body[keyValue as keyof ReadableStream<any>]}}
   })
   return objeto
   }
-  module.exports ={loginStrategy,registerStrategy}
+module.exports = {loginStrategy,registerStrategy}

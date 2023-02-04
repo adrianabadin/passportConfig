@@ -2,45 +2,45 @@ import { Models,Schema as SchemaType} from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
 import { googleUser, IpassportConfigBuilderReturn, IlocalSchema } from "./types"
 const passport =require( 'passport')
-const local=require( 'passport-local')
 const bcrypt=require( 'bcrypt')
 const mongoose=require( 'mongoose')
 const Schema=mongoose.Schema
 const GoogleStrategy=require( 'passport-google-oauth20').Strategy
-const LocalStrategy = local.Strategy
-
+const {registerStrategy,loginStrategy} = require('./strategies/local')
+const oAuthModes=require('./strategies/oAuth2')
+////////////////
+//SCHEMAS
+const googleAuthSchema = new SchemaType<googleUser>({
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  name: String,
+  lastName: String,
+  avatar: String
+})
+const basicSchema = {
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
+}
 function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>): IpassportConfigBuilderReturn {
 //////////////////
 //variables
 /////////////////
-  let userNotFoundMessage:string 
+  let userNotFoundMessage:string =""
   let incorrectPasswordMessage:string
   let userAlrreadyExistsMessage:string
   let crypt = true
   let googleAuthModel:any
-////////////////
-//SCHEMAS
-  const googleAuthSchema = new SchemaType<googleUser>({
-    username: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    name: String,
-    lastName: String,
-    avatar: String
-  })
-  const basicSchema = {
-    username: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    password: {
-      type: String,
-      required: true
-    }
-  }
+
   schemaObject.add(basicSchema)
 /////////////////
 //MODELS
@@ -83,34 +83,12 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>): Ipasspor
       users.findById(id, done)
     })
     loginStrategy(users,userNotFoundMessage,incorrectPasswordMessage,isValid)
-
     return this
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
-    const justLogin = async (_accessToken:any, _refreshToken:any, _profile:any, email:any, cb:any) => {
-      try {
-        googleAuthModel = users
-        const resultado = await googleAuthModel.findOne({ username: email.emails[0].value })
-        if (resultado) {
-          return cb(null, resultado)
-        }
-        return cb(null, false, { message: userNotFoundMessage || `User ${email.emails[0].value} not found` })
-      } catch (err) { return cb(err,null,{message:"Error login user"}) }
-    }
-    const loginAndregister = async (_accessToken:any, _refreshToken:any, _profile:any, email:any, cb:any) => {
-      try {
-        const resultado = await googleAuthModel.findOne({ username: email.emails[0].value })
-        if (resultado) {
-          return cb(null, resultado)
-        }
-        try {
-          const usercreated = await googleAuthModel.create({ username: email.emails[0].value, password: email.id, name: email.name.givenName, lastname: email.name.familyName, avatar: email.photos[0].value })
-          return cb(null, usercreated)
-        } catch (err) { return cb(err,null,{message:"Error creating user"}) }
-      } catch (err) { return cb(err,null,{message:"Error login with oAuth"}) }
-    }
+    const {justLogin,loginAndRegister}=oAuthModes(googleAuthModel,users,userNotFoundMessage)
     passport.use(new GoogleStrategy(authObject,
-      (loginOnly) ? justLogin : loginAndregister))
+      (loginOnly) ? justLogin : loginAndRegister))
     passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
@@ -120,66 +98,6 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>): Ipasspor
     return this
   }
   return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,users,googleAuthModel }
-}
-function registerStrategy(users:any,userAlrreadyExistsMessage:string,createHash:any,schemaObject:any,crypt:boolean){
-  passport.use(
-    'register',
-    new LocalStrategy(
-      { passReqToCallback: true },
-      async (req:Request, username:string, password:string, done:any) => {
-        try {
-          const user = await users.findOne({ username })
-          if (user) return done(null, false, 
-            { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` }) // error, data
-          let newUser = loginObjectCreator(users,req)
-          if (crypt) newUser = { username, password: createHash(password) }
-          // Object.keys(schemaObject.obj).forEach((key:string) => {
-            
-          //   if (req.body !== undefined && req.body !==null)  {
-          //     const value:any =req.body[key as keyof ReadableStream<any>]
-          //     newUser = { ...newUser, [key]: value}}
-          // })
-          newUser.username=username
-          newUser.password= crypt ? createHash(password) :password
-          try {
-            const result = await users.create(newUser)
-            return done(null, result)
-          } catch (err) {
-            done(err,null,{message:"Imposible to register new user"})
-          }
-        } catch (err) {
-          done(err,null,{message:"Imposible to register new user"})
-        }
-      })
-  )
-
-}
-function loginStrategy(users:any,userNotFoundMessage:string,incorrectPasswordMessage:string,isValid:any){
-  passport.use(
-    'login',
-    new LocalStrategy(
-      async (username:string, password:string, done:any) => {
-        try {
-          const user = await users.findOne({ username })
-          if (!user) return done(null, false, { message: userNotFoundMessage || `User ${username} not found` })
-          if (!isValid(user, password)) return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` })
-          
-          return done(null, user,{message: `User ${username} successfully loged`})
-        } catch (err) {
-          done(err)
-        }
-      }
-    )
-  )
-
-}
-function loginObjectCreator(users:any,req:Request){
-let objeto:any 
-Object.keys(users.obj).forEach(keyValue=>{
-if (req.body !==null && req.body[keyValue as keyof ReadableStream<any>]!==undefined){ 
-  objeto={...objeto,[keyValue]:req.body[keyValue as keyof ReadableStream<any>]}}
-})
-return objeto
 }
 
 
