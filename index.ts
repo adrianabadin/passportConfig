@@ -1,7 +1,7 @@
 import { Models,Schema as SchemaType} from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
 import { IgoogleUser, IpassportConfigBuilderReturn, IlocalSchema, IDAO } from './types';
-import { DAOSelector } from './strategies/selectorDAO';
+import { DAOSelector } from './services/selectorDAO';
 const passport =require( 'passport')
 const bcrypt=require( 'bcrypt')
 const mongoose=require( 'mongoose')

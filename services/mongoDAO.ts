@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Models, Mongoose, Query, Schema } from "mongoose";
+import mongoose, {  Model, Query, Schema } from "mongoose";
 import { IgoogleUser, IlocalSchema, IDAO } from "../types";
 
 class MongoDAO implements IDAO{

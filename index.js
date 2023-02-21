@@ -10,14 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const selectorDAO_1 = require("./strategies/selectorDAO");
+const selectorDAO_1 = require("./services/selectorDAO");
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { registerStrategy, loginStrategy } = require('./strategies/local');
 const oAuthModes = require('./strategies/oAuth2');
-const DaoMongo = require('./strategies/mongoDAO');
 ////////////////
 //SCHEMAS
 const googleAuthSchema = new mongoose_1.Schema({
@@ -98,6 +97,6 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
         });
         return this;
     }
-    return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, users: DAOlocal.model, googleAuthModel };
+    return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, localModel: DAOlocal.model, goaModel: DAOgoa.model };
 }
 module.exports = passportConfigBuilder;
