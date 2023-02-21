@@ -8,20 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 const passport = require('passport');
 const local = require('passport-local');
 const LocalStrategy = local.Strategy;
-function registerStrategy(users, userAlrreadyExistsMessage, createHash, schemaObject, crypt) {
+function registerStrategy(DAO, userAlrreadyExistsMessage, createHash, crypt) {
     passport.use('register', new LocalStrategy({ passReqToCallback: true }, (req, username, password, done) => __awaiter(this, void 0, void 0, function* () {
         try {
-            const user = yield users.findOne({ username });
+            const user = yield DAO.findByUserName(username); //await users.findOne({ username })
             if (user)
                 return done(null, false, { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` });
-            let newUser = loginObjectCreator(users, req);
+            let newUser = loginObjectCreator(DAO.model, req);
             newUser = Object.assign(Object.assign({}, newUser), { username, password: crypt ? createHash(password) : password });
             try {
-                const result = yield users.create(newUser);
-                return done(null, result);
+                const result = yield DAO.createUser(newUser); //users.create(newUser)
+                return done(null, result); //.findOne(id)
             }
             catch (err) {
                 done(err, null, { message: "Imposible to register new user" });
@@ -32,10 +33,10 @@ function registerStrategy(users, userAlrreadyExistsMessage, createHash, schemaOb
         }
     })));
 }
-function loginStrategy(users, userNotFoundMessage, incorrectPasswordMessage, isValid) {
+function loginStrategy(DAO, userNotFoundMessage, incorrectPasswordMessage, isValid) {
     passport.use('login', new LocalStrategy((username, password, done) => __awaiter(this, void 0, void 0, function* () {
         try {
-            const user = yield users.findOne({ username });
+            const user = yield DAO.findByUserName(username); //users.findOne({ username })
             if (!user)
                 return done(null, false, { message: userNotFoundMessage || `User ${username} not found` });
             if (!isValid(user, password))

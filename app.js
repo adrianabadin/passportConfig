@@ -1,13 +1,23 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const selectorDAO_1 = require("./strategies/selectorDAO");
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { registerStrategy, loginStrategy } = require('./strategies/local');
 const oAuthModes = require('./strategies/oAuth2');
+const DaoMongo = require('./strategies/mongoDAO');
 ////////////////
 //SCHEMAS
 const googleAuthSchema = new mongoose_1.Schema({
@@ -20,30 +30,20 @@ const googleAuthSchema = new mongoose_1.Schema({
     lastName: String,
     avatar: String
 });
-const basicSchema = {
-    username: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
-        required: true
-    }
-};
-function passportConfigBuilder(schemaObject) {
+function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     //////////////////
     //variables
     /////////////////
+    const DAOlocal = new selectorDAO_1.DAOSelector(schemaObject, "localSchema")[dbType]; // DaoMongo(schemaObject,"localSchema")
+    const DAOgoa = new selectorDAO_1.DAOSelector(schemaObject, "goaSchema")[dbType]; //DaoMongo(schemaObject,"goaSchema")
     let userNotFoundMessage = "";
     let incorrectPasswordMessage;
     let userAlrreadyExistsMessage;
     let crypt = true;
     let googleAuthModel;
-    schemaObject.add(basicSchema);
+    //schemaObject.add(basicSchema)
     /////////////////
     //MODELS
-    const users = mongoose.model('users', new Schema(schemaObject));
     googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema);
     ///////////////
     //FUNCTIONS
@@ -70,27 +70,34 @@ function passportConfigBuilder(schemaObject) {
     }
     /////////BUILDERS///////////////////
     function buildLocalConfig() {
-        registerStrategy(users, userAlrreadyExistsMessage, createHash, schemaObject, crypt);
+        registerStrategy(DAOlocal, userAlrreadyExistsMessage, createHash, crypt);
         passport.serializeUser((user, done) => {
             done(null, user._id);
         });
-        passport.deserializeUser((id, done) => {
-            users.findById(id, done);
-        });
-        loginStrategy(users, userNotFoundMessage, incorrectPasswordMessage, isValid);
+        passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
+            yield DAOlocal.findById(id, done); //users.findById(id, done)
+        }));
+        loginStrategy(DAOlocal, userNotFoundMessage, incorrectPasswordMessage, isValid);
         return this;
     }
     function GoogleoAuth(authObject, loginOnly = false) {
-        const { justLogin, loginAndRegister } = oAuthModes(googleAuthModel, users, userNotFoundMessage);
+        console.log(oAuthModes);
+        const { justLogin, loginAndRegister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage); //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
         passport.use(new GoogleStrategy(authObject, (loginOnly) ? justLogin : loginAndRegister));
         passport.serializeUser((user, done) => {
             done(null, user._id);
         });
         passport.deserializeUser((id, done) => {
-            googleAuthModel.findById(id, done);
+            if (loginOnly) {
+                DAOlocal.findById(id, done);
+            }
+            else {
+                DAOgoa.findById(id, done);
+            }
+            //googleAuthModel.findById(id, done)
         });
         return this;
     }
-    return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, users, googleAuthModel };
+    return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, users: DAOlocal.model, googleAuthModel };
 }
 module.exports = passportConfigBuilder;
