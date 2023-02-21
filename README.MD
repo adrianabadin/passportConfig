@@ -60,14 +60,9 @@ app.use(baseSession);
 ```
 
 And at this time we use our package to provide configuration for Passport JS, lets start with **_<u>Local Strategy</u>_** implementation.
-We will call **passportConfigBuilder()** function, this function recives a mongoose **Schema** as unique parameter
+We will call **passportConfigBuilder()** function, this function recives a mongoose **Schema** as the first parameter and a string to chose the databse used with passport js at this point we only have mongoose implemented but we will have mysql and firebase as son as possible
 
-This object is a mongo DB schema object, and its the only data needed to provide configuration for the entire strategy.
-
-The object will have always 2 keys as default configuration:
-
-1. username
-2. password
+The schema or table **will not have username and password fields on their structure** they will be added automatically by this package
 
 This is the inner structure of a basic configuration schema for this implementation.
 
@@ -85,14 +80,14 @@ const basicSchema = {
 };
 ```
 
-This means that the data you provide in the configuration object will add more fields to your user registration implementation, but **username** and **password** fields have a **default** configuration set in place.
+This means that the data you provide in the database schema object will add more fields to your user registration implementation, but **username** and **password** fields have a **default** configuration set in place.
 
 To call the implementation of our configuration you need to call the method **buildLocalConfig()**
 
 So the basic configuration for this implementation would be :
 
 ```javascript
-passportConfigBuilder(new Schema({})).buildLocalConfig();
+passportConfigBuilder(new Schema({}),"MONGO").buildLocalConfig();
 ```
 
 And if you need other fields on the login form you should do this:
@@ -103,14 +98,13 @@ passportConfigBuilder(Schema({
 	lastName:String,
 	age:Number
 	email:{type:String, required:true}
-	})).buildLocalConfig()
+	}),"MONGO").buildLocalConfig()
 ```
 
 This would generate 2 authentication patterns
 
 1. 'login' this is the validation login authentication strategy for passport JS
 2. 'register' this middleware is in charge of persisting the data provided by the req.body object in the database connection you have set on the top of the file.
-3. As an implementation process we will generate a **update** and a **delete** authentication pattern in the following updates
 
 After the configuration you need to initialize passport by calling:
 
@@ -145,7 +139,7 @@ app.post("/failedLogin", (req, res) => {
 });
 ```
 
-So at this point the objective of this package is clearly avoid the boilerplate code needed to instantiate a login/register using passport Local Strategy. Of course the traditional implementation allows a fine tune not provided by this library, but in the habitual scenarios it should be a great tool to use.
+So at this point the objective of this package is clearly avoid the boilerplate code needed to instantiate a login/register using passport Local Strategy. Of course the traditional implementation allows a fine tune not provided by this function, but in the habitual scenarios it should be a great tool to be used.
 
 ### Other spects of passportConfigBuilder function
 
@@ -154,15 +148,15 @@ The function returns 5 elements:
 1. **buildLocalConfig** **method** (explained above)
 2. **setCrypt** **method** sets on or off the password encryption. True by default encripts the password
 3. **GoogleoAuth** **method** configures the data required for google oAuth authentication (explained above)
-4. **users Access** the user model of the mongo database
-5. **googleAuthModel** Acces the googleAuth users model of the mongo database
+4. **localModel** Access the users model of the database
+5. **goaModel** Access the googleAuth users model of the mongo database
 6. **setUserNotFoundMessage** **method** sets custom error user not found message
 7. **setIncorrectPassword** **method** sets custom error for incorrect password message
 8. **setUserAlrreadyExistsMessage** **method** sets custom error for user already exists message
 
 ### Google oAuth 2.0 Strategy for passport JS
 
-Now lets add to the implementation we just wrote a google oAuth login.
+Now lets add to the implementation google oAuth login.
 
 Instead of the configuration line placed above, we are gonna use another method, **GoogleoAuth()**
 
@@ -202,7 +196,7 @@ Even when at this point we only provide 2 strategies, will keep on working on th
 The code that follows implements both strategies in only one line of code.
 
 ```javascript
-passportConfigBuilder({})
+passportConfigBuilder(new Schema({}),"MONGO")
   .GoogleoAuth(
     {
       clientID:

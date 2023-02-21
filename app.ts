@@ -1,16 +1,16 @@
 import { Models,Schema as SchemaType} from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import { googleUser, IpassportConfigBuilderReturn, IlocalSchema } from "./types"
+import { IgoogleUser, IpassportConfigBuilderReturn, IlocalSchema, IDAO } from './types';
+import { DAOSelector } from './strategies/selectorDAO';
 const passport =require( 'passport')
 const bcrypt=require( 'bcrypt')
 const mongoose=require( 'mongoose')
-const Schema=mongoose.Schema
 const GoogleStrategy=require( 'passport-google-oauth20').Strategy
 const {registerStrategy,loginStrategy} = require('./strategies/local')
 const oAuthModes=require('./strategies/oAuth2')
 ////////////////
 //SCHEMAS
-const googleAuthSchema = new SchemaType<googleUser>({
+const googleAuthSchema = new SchemaType<IgoogleUser>({
   username: {
     type: String,
     required: true,
@@ -20,31 +20,21 @@ const googleAuthSchema = new SchemaType<googleUser>({
   lastName: String,
   avatar: String
 })
-const basicSchema = {
-  username: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true
-  }
-}
-function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>): IpassportConfigBuilderReturn {
+function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "MONGO" ="MONGO"): IpassportConfigBuilderReturn {
 //////////////////
 //variables
 /////////////////
+  const DAOlocal=new DAOSelector(schemaObject,"localSchema")[dbType] // DaoMongo(schemaObject,"localSchema")
+  const DAOgoa=new DAOSelector(schemaObject,"goaSchema")[dbType]//DaoMongo(schemaObject,"goaSchema")
   let userNotFoundMessage:string =""
   let incorrectPasswordMessage:string
   let userAlrreadyExistsMessage:string
   let crypt = true
   let googleAuthModel:any
 
-  schemaObject.add(basicSchema)
+  //schemaObject.add(basicSchema)
 /////////////////
 //MODELS
-  const users = mongoose.model('users', new Schema(schemaObject))
   googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema)
 
   ///////////////
@@ -75,29 +65,32 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>): Ipasspor
   }
   /////////BUILDERS///////////////////
   function buildLocalConfig (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn {
-    registerStrategy(users,userAlrreadyExistsMessage,createHash,schemaObject,crypt)
+    registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt)
     passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
-    passport.deserializeUser((id:string, done:any) => {
-      users.findById(id, done)
+    passport.deserializeUser(async (id:string, done:any) => {
+     await DAOlocal.findById(id,done) //users.findById(id, done)
     })
-    loginStrategy(users,userNotFoundMessage,incorrectPasswordMessage,isValid)
+    loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid)
     return this
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
-    const {justLogin,loginAndRegister}=oAuthModes(googleAuthModel,users,userNotFoundMessage)
+   console.log(oAuthModes)
+    const {justLogin,loginAndRegister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
     passport.use(new GoogleStrategy(authObject,
       (loginOnly) ? justLogin : loginAndRegister))
     passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
     passport.deserializeUser((id:string, done:any) => {
-      googleAuthModel.findById(id, done)
+     if (loginOnly){DAOlocal.findById(id,done)}
+     else {DAOgoa.findById(id,done)}
+      //googleAuthModel.findById(id, done)
     })
     return this
   }
-  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,users,googleAuthModel }
+  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }
 }
 
 
