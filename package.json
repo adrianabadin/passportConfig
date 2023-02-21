@@ -1,8 +1,8 @@
 {
   "name": "passport-fast-config",
-  "version": "1.0.5b",
+  "version": "1.0.6b",
   "description": "",
-  "main": "./app.ts",
+  "main": "./app.js",
   "type": "commonjs",
   "keywords": [],
   "author": "",
