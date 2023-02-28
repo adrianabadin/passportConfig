@@ -33,12 +33,13 @@ class MongoDAO implements IDAO{
             this.model.findById(id,cb)
           },
           public findByUserName=async (username:string):Promise<any> =>{
-            return await this.model.findOne({username}) 
-          },
+             try {return await this.model.findOne({username})}catch(error){console.log(error)} 
+          
+            },
           public createUser=async (user:any):Promise<any>=>{
-            return await this.model.create(user) 
+            try {return await this.model.create(user)}catch(error){console.log(error)} 
           }
-
+          
           ){
           }
 }

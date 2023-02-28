@@ -1,4 +1,5 @@
 import { Models } from "mongoose";
+import { Knex } from "knex";
 // type AuthObjectType ={
 //     clientID:string,
 //   clientSecret: string,
@@ -13,6 +14,29 @@ interface IpassportConfigBuilderReturn {
     setUserAlrreadyExistsMessage:(userExistsParam:string)=>IpassportConfigBuilderReturn,
     localModel:Models,
     goaModel:Models
+}
+interface TableBuilderTypes {
+    increments: () => ColumnBuilder;
+    string: (columnName?: string, length?: number) => ColumnBuilder;
+    boolean: (columnName?: string) => ColumnBuilder;
+    integer: (columnName?: string) => ColumnBuilder;
+    timestamps: (columnName?: string) => ColumnBuilder;
+    text: (columnName?: string) => ColumnBuilder;
+    float: (columnName?: string) => ColumnBuilder;
+    date: (columnName?: string) => ColumnBuilder;
+    datetime: (columnName?: string) => ColumnBuilder;
+
+
+
+
+
+
+    // Agrega aquí el nombre y tipo de todas las demás funciones de TableBuilder que desees utilizar.
+  }
+
+export type ISqlTypes = keyof  TableBuilderTypes//"string"|"increments"|"primary"|"integer"|"boolean"|"date"|"datetime"|"timestamps"
+export interface ISqlSchema {
+    [key:string]: ISqlTypes
 }
 export interface IgoogleUser {
     username:string,
