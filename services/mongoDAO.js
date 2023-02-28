@@ -58,9 +58,19 @@ class MongoDAO {
     model = isLocal ? mongoose_1.default.model('localCollection', db.add(basicSchema)) : mongoose_1.default.model('goaCollection', gooogleOauthSchema), findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
         this.model.findById(id, cb);
     }), findByUserName = (username) => __awaiter(this, void 0, void 0, function* () {
-        return yield this.model.findOne({ username });
+        try {
+            return yield this.model.findOne({ username });
+        }
+        catch (error) {
+            console.log(error);
+        }
     }), createUser = (user) => __awaiter(this, void 0, void 0, function* () {
-        return yield this.model.create(user);
+        try {
+            return yield this.model.create(user);
+        }
+        catch (error) {
+            console.log(error);
+        }
     })) {
         this.db = db;
         this.schemaType = schemaType;
