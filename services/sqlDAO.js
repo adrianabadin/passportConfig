@@ -10,67 +10,136 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SqlDAO = void 0;
-const uuid_1 = require("uuid");
-class SqlDAO //implements IDAO
- {
-    constructor(db, //:Knex<Tables>,
-    OMR, schemaType, isLocal = () => (schemaType === "localSchema"), hasField = (field) => __awaiter(this, void 0, void 0, function* () {
-        const fields = yield this.db.columnInfo();
-        return field in fields;
-    }), tableName = () => __awaiter(this, void 0, void 0, function* () {
-        const arraySQL = this.db.toString().split("(`");
-        return arraySQL[arraySQL.length - 1].slice(0, arraySQL[arraySQL.length - 1].length - 2);
-    }), modelConstructor = () => __awaiter(this, void 0, void 0, function* () {
-        console.log("es local:", isLocal());
-        if (isLocal()) {
-            if (!(yield hasField("username"))) {
-                yield this.OMR.schema.alterTable(yield tableName(), (table) => {
-                    table.unique("username");
-                    table.string("username");
+class SqlDAO {
+    constructor(db, dbSchema, schemaType, createUsersTable = () => __awaiter(this, void 0, void 0, function* () {
+        if (schemaType === "localSchema") {
+            const isTableUsers = yield db.schema.hasTable('users');
+            console.log("users", isTableUsers);
+            if (!isTableUsers) {
+                yield db.schema.createTable('users', (table) => {
+                    table.increments('_id').primary();
+                    table.string('username').unique();
+                    table.string('password');
+                    table.boolean('isVerified');
+                    Object.keys(dbSchema).forEach((key) => {
+                        console.log(key);
+                        const keyValue = dbSchema[key];
+                        table.primary;
+                        if (key !== 'username' && key !== 'password' && key !== 'isVerified' && key !== '_id') {
+                            if (typeof table[keyValue] == "function")
+                                table[keyValue](key);
+                        }
+                    });
                 });
             }
-            if (!(yield hasField("password"))) {
-                yield this.OMR.schema.alterTable(yield tableName(), (table) => {
-                    table.string("password");
-                });
-            }
-            if (!(yield hasField("_id"))) {
-                yield this.OMR.schema.alterTable(yield tableName(), (table) => {
-                    table.string("_id");
-                });
-            }
-            if (!(yield hasField("isValidated"))) {
-                yield this.OMR.schema.alterTable(yield tableName(), (table) => {
-                    table.boolean("isValidated");
-                });
-            }
-            return true;
         }
-        return false;
-    }), model = db, findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
-        (yield this.model).where({ _id: id }).select("*").then((response) => {
+        else if (this.schemaType === "goaSchema") {
+            const isTableUsers = yield this.db.schema.hasTable('goa');
+            if (!isTableUsers) {
+                yield (this.db).schema.createTable('goa', (table) => {
+                    table.increments('_id').primary();
+                    table.string('username').unique();
+                    table.string('password');
+                    table.string('name');
+                    table.string('lastname');
+                    table.string('avatar');
+                });
+            }
+        }
+    }), isTable = (table) => __awaiter(this, void 0, void 0, function* () {
+        console.log(yield (yield db).schema.hasTable(table));
+        return yield (yield db).schema.hasTable(table);
+    }), verifyTableStructure = (table) => __awaiter(this, void 0, void 0, function* () {
+        if (yield isTable(table)) { // this.isTable(table)) {
+            if (table === "users") {
+                const id = yield db.schema.hasColumn(table, "_id");
+                console.log("id :", id);
+                if (!(yield db.schema.hasColumn(table, "_id")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.increments("_id");
+                    });
+                if (!(yield db.schema.hasColumn(table, "username")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("username").unique();
+                        console.log("username");
+                    });
+                if (!(yield db.schema.hasColumn(table, "password")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("password");
+                        console.log("pass");
+                    });
+                if (!(yield db.schema.hasColumn(table, "isVerified")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.boolean("isVerified");
+                        console.log("veri");
+                    });
+            }
+            else if (table === "goa") {
+                if (!(yield db.schema.hasColumn(table, "_id")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.increments("_id");
+                    });
+                if (!(yield db.schema.hasColumn(table, "username")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("username").unique();
+                    });
+                if (!(yield db.schema.hasColumn(table, "password")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("password");
+                    });
+                if (!(yield db.schema.hasColumn(table, "name")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("name");
+                    });
+                if (!(yield db.schema.hasColumn(table, "lastname")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("lastname");
+                    });
+                if (!(yield db.schema.hasColumn(table, "avatar")))
+                    yield this.db.schema.alterTable(table, (tableBuilder) => {
+                        tableBuilder.string("avatar");
+                    });
+            }
+        }
+        else {
+            console.log("create table");
+            yield createUsersTable();
+        }
+    }), model = db((schemaType === "localSchema") ? "users" : "goa"), findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
+        yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
+        yield db((schemaType === "localSchema") ? "users" : "goa").where("_id", `${id}`).select("*").then((response) => {
             cb(null, response);
         }).catch((error) => cb(error));
     }), findByUserName = (username) => __awaiter(this, void 0, void 0, function* () {
-        return yield (yield this.model).where({ username }).select("*").then((result) => {
-            return result;
-        }).catch((error) => error);
+        return yield db((schemaType === "localSchema") ? "users" : "goa").where("username", username).select("*");
     }), createUser = (user) => __awaiter(this, void 0, void 0, function* () {
-        //const model= await this.modelConstructor()
-        console.log("texto", yield modelConstructor());
-        return yield this.db.insert(Object.assign(Object.assign({}, user), { _id: (0, uuid_1.v4)() }));
+        try {
+            yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
+            return yield db.insert(user).into((schemaType === "localSchema") ? "users" : "goa");
+        }
+        catch (error) {
+            console.log((error.errno === 19) ? "UserName already exists" : error);
+        }
+    }), returnFields = () => __awaiter(this, void 0, void 0, function* () {
+        try {
+            return Object.keys(yield db((schemaType === "localSchema") ? "users" : "goa").columnInfo());
+        }
+        catch (error) {
+            console.log(error);
+            return ["Hubo un error"];
+        }
     })) {
         this.db = db;
-        this.OMR = OMR;
+        this.dbSchema = dbSchema;
         this.schemaType = schemaType;
-        this.isLocal = isLocal;
-        this.hasField = hasField;
-        this.tableName = tableName;
-        this.modelConstructor = modelConstructor;
+        this.createUsersTable = createUsersTable;
+        this.isTable = isTable;
+        this.verifyTableStructure = verifyTableStructure;
         this.model = model;
         this.findById = findById;
         this.findByUserName = findByUserName;
         this.createUser = createUser;
+        this.returnFields = returnFields;
     }
 }
 exports.SqlDAO = SqlDAO;
