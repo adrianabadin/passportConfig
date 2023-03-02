@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const loggerHLP_1 = require("../helper/loggerHLP");
 class MongoDAO {
     constructor(db, schemaType, basicSchema = new mongoose_1.Schema({
         username: {
@@ -43,7 +44,8 @@ class MongoDAO {
         password: {
             type: String,
             required: true
-        }
+        },
+        isVerified: { type: Boolean, default: true }
     }), gooogleOauthSchema = new mongoose_1.Schema({
         username: {
             type: String,
@@ -56,22 +58,39 @@ class MongoDAO {
     }), isLocal = (schemaType === 'localSchema'), 
     //Funciones que deben ser iguales
     model = isLocal ? mongoose_1.default.model('localCollection', db.add(basicSchema)) : mongoose_1.default.model('goaCollection', gooogleOauthSchema), findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
-        this.model.findById(id, cb);
+        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findById" });
+        try {
+            this.model.findById(id, cb);
+        }
+        catch (e) {
+            loggerHLP_1.loggerObject.error.error({ level: "error", title: "Error accesing database", message: `${e}` });
+        }
     }), findByUserName = (username) => __awaiter(this, void 0, void 0, function* () {
+        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findByUserName" });
         try {
             return yield this.model.findOne({ username });
         }
-        catch (error) {
-            console.log(error);
+        catch (e) {
+            loggerHLP_1.loggerObject.error.error({ level: "error", title: "Error accesing database", message: `${e}` });
         }
     }), createUser = (user) => __awaiter(this, void 0, void 0, function* () {
+        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "createUser" });
         try {
             return yield this.model.create(user);
         }
-        catch (error) {
-            console.log(error);
+        catch (e) {
+            loggerHLP_1.loggerObject.error.error({ level: "error", title: "Error accesing database", message: `${e}` });
         }
-    })) {
+    }), returnFields = () => {
+        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "returnFields" });
+        try {
+            return Object.keys(this.model.schema.obj);
+        }
+        catch (e) {
+            loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}` });
+            return { message: "Something went wrong while retriving schema fields", error: `${e}` };
+        }
+    }) {
         this.db = db;
         this.schemaType = schemaType;
         this.basicSchema = basicSchema;
@@ -81,6 +100,7 @@ class MongoDAO {
         this.findById = findById;
         this.findByUserName = findByUserName;
         this.createUser = createUser;
+        this.returnFields = returnFields;
     }
 }
 module.exports = MongoDAO;

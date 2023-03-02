@@ -13,7 +13,9 @@ interface IpassportConfigBuilderReturn {
     setIncorrectPassword:(incorrectPasswordParam:string)=>IpassportConfigBuilderReturn,
     setUserAlrreadyExistsMessage:(userExistsParam:string)=>IpassportConfigBuilderReturn,
     localModel:Models,
-    goaModel:Models
+    goaModel:Models,
+    hasVerification:(this:IpassportConfigBuilderReturn)=>IpassportConfigBuilderReturn
+    setNotVerifiedMessage:(this:IpassportConfigBuilderReturn,message:string)=>IpassportConfigBuilderReturn
 }
 interface TableBuilderTypes {
     increments: () => ColumnBuilder;
@@ -26,7 +28,10 @@ interface TableBuilderTypes {
     date: (columnName?: string) => ColumnBuilder;
     datetime: (columnName?: string) => ColumnBuilder;
 
-
+}
+export type SqlDestructuring={
+    db:Knex
+    dbSchema:ISqlSchema
 
 
 
@@ -55,6 +60,11 @@ model:Model<any>,
 findById: (id:string,cb:any)=>Promise<any>,
 findByUserName:(userName:string)=>Promise<any>,
 createUser:(user:any)=>Promise<any>
+returnFields:() => string[]|ErrorMessage|Promise<string[]|ErrorMessage>
+}
+export type ErrorMessage ={
+    message:string
+    error:string
 }
 export interface IDAOSelector {
 MONGO: IDAO

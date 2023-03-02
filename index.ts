@@ -31,6 +31,8 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
   let userAlrreadyExistsMessage:string
   let crypt = true
   let googleAuthModel:any
+  let hasVerificationFlag:boolean=false
+  let notVerifiedMessage:string
 
   //schemaObject.add(basicSchema)
 /////////////////
@@ -63,9 +65,17 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     crypt = value
     return this 
   }
+  function hasVerification (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn{
+    hasVerificationFlag=true
+    return this
+  }
+  function setNotVerifiedMessage(this:IpassportConfigBuilderReturn,message:string):IpassportConfigBuilderReturn{
+    notVerifiedMessage=message
+    return this
+  }
   /////////BUILDERS///////////////////
   function buildLocalConfig (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn {
-    registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt)
+    registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt,hasVerificationFlag)
     passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
@@ -90,7 +100,7 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     })
     return this
   }
-  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }
+  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,hasVerification,setNotVerifiedMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }
 }
 
 

@@ -3,11 +3,13 @@ var knex = require('knex')({
   client: 'sqlite3',
   connection: { filename: './mydb.sqlite' }
 })
+const logger=require('./helper/loggerHLP').loggerObject
+logger.debug.debug({level:"info", message:"adrian"})
 const OtroDao=require('./services/SqlDAO').SqlDAO
 //const DAOclass=require('./services/sqlDAO').SqlDAO
 //console.log(DAOclass)
 
-const OtroMas=new OtroDao(knex,{mail:"string"},"localSchema")
+const OtroMas=new OtroDao({db:knex,dbSchema:{mail:"string"}},"localSchema")
 //OtroMas.verifyTableStructure("users").then(() => {console.log("Terminado")})
   //OtroMas.createUser({username:"aabadin@gmail.com2",password:"111",isVerified:true,mail:"aabadin@gmail.com"	}).then(()=>console.log("fin"))
 //OtroMas.findById(2,(e,res)=>console.log(res,e))
