@@ -1,71 +1,197 @@
-import { Tables } from 'knex/types/tables';
-import { IDAO } from '../types';
-import  { Knex } from 'knex';
-import Schema from 'mongoose';
-import { Schema as SchemaType } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import { Knex } from "knex";
+import { IDAO, ISqlSchema, ISqlTypes, SqlDestructuring, ErrorMessage } from '../types';
+import {loggerObject} from "../helper/loggerHLP"
 
-export class SqlDAO //implements IDAO
-{
-    constructor(
-         protected db:Knex.QueryBuilder, //:Knex<Tables>,
-         protected OMR:Knex,
-         protected schemaType: "localSchema"|"goaSchema",
-         protected isLocal =():boolean => (schemaType==="localSchema"),
-         protected hasField=async (field:string):Promise<boolean> =>{
-            const fields =await this.db.columnInfo()
-            return field in fields
-         } ,
-        protected tableName=async ()=>{
-            const arraySQL= this.db.toString().split("(`")
-            return arraySQL[arraySQL.length-1].slice(0,arraySQL[arraySQL.length-1].length-2) 
-        },
-        protected modelConstructor=async ():Promise<boolean>=>{
- console.log("es local:",isLocal())
-            if (isLocal()){
-                if (!(await hasField("username"))){
-                    await this.OMR.schema.alterTable(await tableName(),(table:any)=>{
-                        table.unique("username")
-                        table.string("username")
-                    })
-                }
-                if (!(await hasField("password"))){
-                    await this.OMR.schema.alterTable(await tableName(),(table:any)=>{
-                        table.string("password")
-                    })
-                }
-                if (!(await hasField("_id"))){
-                    await this.OMR.schema.alterTable(await tableName(),(table:any)=>{
-                        
-                        table.string("_id")
-                    })
-                }
-                if (!(await hasField("isValidated"))){
-                   await this.OMR.schema.alterTable(await tableName(),(table:any)=>{
-                        table.boolean("isValidated")
-                        
-                    })
-                }
-                return true
-            }
-return false
-            
-        }, 
-        public model = db,
-                public findById=async (id:string,cb:any):Promise<any> =>{
-            (await this.model).where({_id:id}).select("*").then((response:any)=>{
-                cb(null,response)
-            }).catch((error:any)=>cb(error))
-          },
-          public findByUserName=async (username:string):Promise<any> =>{
-            return await (await this.model).where({username}).select("*").then((result:any)=>{
-                return result
-            }).catch((error:any)=>error)
-          },
-          public createUser=async (user:any):Promise<any>=>{
-           //const model= await this.modelConstructor()
-            console.log("texto",await modelConstructor())
-           return await this.db.insert({...user,_id:uuidv4()})
-          }
-    ){}
+/*
+Constructor options:
+Needs 2 params 
+1) Object {
+    db: the knex funcion passed after connection established
+2) String A string that contains "localSchema" or "goaSchema" 
+serves to establish wich model is generating
 }
+*/
+class SqlDAO implements IDAO {
+    protected db:Knex
+    protected dbSchema:ISqlSchema
+    constructor(
+        {db,dbSchema}:SqlDestructuring,
+        
+        protected schemaType: "localSchema"|"goaSchema",
+        protected createUsersTable=async ():Promise<void> =>{
+            loggerObject.debug.debug({level:"debug",message:"createUsersTable" })
+
+            if (schemaType==="localSchema") {
+                let isTableUsers 
+                try{          
+                    isTableUsers=  await  db.schema.hasTable('users')            
+                }
+                catch(e)
+                {
+                    loggerObject.error.error({level:"error",message:`${e}`})
+                }
+            if (!isTableUsers){            
+                loggerObject.debug.debug({level:"debug",message:"Creating table" })
+                try{
+                await db.schema.createTable('users',(table:Knex.TableBuilder)=>{
+               table.increments('_id').primary()
+               table.string('username').unique()
+               table.string('password')
+               table.boolean('isVerified')
+                Object.keys(dbSchema).forEach((key:string)=>{
+                    const keyValue = dbSchema[key] as ISqlTypes
+                    table.primary
+                    if (key!=='username' && key!=='password'&& key!=='isVerified' && key!=='_id'){ 
+                        if (typeof table[keyValue]=="function") table[keyValue](key)}
+                })
+            })
+        }catch(error){loggerObject.error.error({message:`${error}`,level:"error"});}
+        }
+    }else if (this.schemaType==="goaSchema"){
+        const isTableUsers=await  this.db.schema.hasTable('goa')
+        if (!isTableUsers){   
+            loggerObject.debug.debug({level:"info",message:"Creating goa Table"})         
+            try{
+            await (this.db).schema.createTable('goa',(table:Knex.TableBuilder)=>{
+               table.increments('_id').primary()
+               table.string('username').unique()
+               table.string('password')
+               table.string('name')
+               table.string('lastname')
+               table.string('avatar')
+               loggerObject.debug.debug({level:"info",message:"GOA table created"})         
+            })
+        }catch(error){loggerObject.error.error({level:"error",message:`${error}`})}
+        }
+    }
+        },
+        protected isTable =async (table:"goa"|"users"):Promise<boolean>=>{
+            try{
+            loggerObject.debug.debug({level:"info",message:"isTable",table})         
+            return await (await db).schema.hasTable(table)
+        }
+        catch(error){
+            loggerObject.error.error({level:"error",message:`${error}`})
+            return false
+    }
+        },
+    protected verifyTableStructure =async (table: "goa"|"users"):Promise<void>=>{
+        try{
+            loggerObject.debug.info({level:"debug",message:"verifyTableStructure"})
+        if (await isTable(table)){
+        if (table==="users"){
+            try{
+            const id=await db.schema.hasColumn(table,"_id")
+            console.log("id :",id)
+            if  (!await db.schema.hasColumn(table, "_id"))await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.increments("_id")
+            })
+            }
+            catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing _id field"})}
+            try{ 
+                if  (!await db.schema.hasColumn(table, "username")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("username").unique()
+                console.log("username")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing username field"})}
+        try{ 
+            if  (!await db.schema.hasColumn(table, "password")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("password")
+                console.log("pass")
+
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing password field"})}
+        try{     
+        if  (!await db.schema.hasColumn(table, "isVerified")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.boolean("isVerified")
+                console.log("veri")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing isVerified field"})}
+        }else if (table==="goa"){
+            try{ 
+            if  (!await db.schema.hasColumn(table, "_id"))await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.increments("_id")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing _id field"})}
+        try { 
+            if  (!await db.schema.hasColumn(table, "username")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("username").unique()
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing username field"})}
+        try{ 
+            if  (!await db.schema.hasColumn(table, "password")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("password")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing password field"})}
+        try{ 
+            if  (!await db.schema.hasColumn(table, "name")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("name")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing name field"})}
+        try{ 
+            if  (!await db.schema.hasColumn(table, "lastname")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("lastname")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing lastname field"})}
+        try {     
+        if  (!await db.schema.hasColumn(table, "avatar")) await this.db.schema.alterTable(table,(tableBuilder:Knex.TableBuilder)=>{
+                tableBuilder.string("avatar")
+            })
+        }catch(e){loggerObject.error.error({level:"error",message:`${e}`,title:"Error by verifing avatar field"})}
+        }
+    }else {
+        loggerObject.info.info({level:"info",message:"Table doesnt exists creating table"})
+        try{ 
+            await createUsersTable()
+       }catch(e){loggerObject.error.error({level:"error",message:`${e}`})}
+        }
+    }catch(error){loggerObject.error.error({level:"error",title:"Error verifing table structure",message:`${error}`})}
+    },
+    
+    public model = db((schemaType==="localSchema")?"users":"goa"),
+    public findById=async (id:string,cb:any):Promise<any> =>{
+        loggerObject.debug.debug({level:"debug",message:"findById"})
+        try {
+        await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")               
+    }catch(e){loggerObject.error.error({level:"error",message:`${e}`})}
+    loggerObject.debug.debug({level:"debug",message:"Starting the query"})
+        await db((schemaType==="localSchema")?"users":"goa").where("_id",`${id}`).select("*").then((response:any)=>{
+            cb(null,response)
+        }).catch((error:any)=>cb(error))
+    },
+    public findByUserName=async (username:string):Promise<any> =>{
+       try{
+        loggerObject.debug.debug({level:"debug",message:"findByUserName"})
+        await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")               
+        return await db((schemaType==="localSchema") ?"users":"goa").where("username",username).select("*")
+    }  catch(error){loggerObject.error.error({level:"error",message:"Error accesing Database"})}
+        
+      },
+      public createUser=async (user:any):Promise<any>=>{
+        try {
+            loggerObject.debug.debug({level:"debug",message:"createUser"})
+
+        await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")    
+        return await db.insert(user).into((schemaType==="localSchema") ?"users":"goa")}
+        catch(error:any){loggerObject.error.error({level: "error",message:(error.errno===19)? "UserName already exists": `${error}`})}
+      },
+      public returnFields=async():Promise<string[] | ErrorMessage>=>{
+        try{
+            loggerObject.debug.debug({level:"debug",message:"returnFields"})
+        await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")               
+        return Object.keys(await db((schemaType==="localSchema") ?"users":"goa").columnInfo())
+    }catch(error){
+        loggerObject.error.error({level: "error",message:`${error}`})
+        return {message:"Hubo un error",error:`${error}`}
+        }
+      }
+    ){
+        if (db===undefined || dbSchema===undefined) {
+            loggerObject.error.error({message:"Fatal Error",error:"Invalid schemaObject db:Knex expected abd dbSchema:{fields:Knex.Schematype} expected"})
+            throw new Error("Invalid schemaObject db:Knex expected abd dbSchema:{fields:Knex.Schematype} expected")}
+        this.db=db
+        this.dbSchema=dbSchema
+    }
+}
+
+module.exports= SqlDAO

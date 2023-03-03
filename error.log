@@ -1,0 +1,36 @@
+{
+  level: 'error',
+  message: "TypeError: Cannot read properties of undefined (reading 'schema')",
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-02T09:16:02.707Z'
+}
+{
+  level: 'error',
+  message: "TypeError: Cannot read properties of undefined (reading 'schema')",
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-02T09:16:02.710Z'
+}
+{
+  level: 'error',
+  message: 'TypeError: createUsersTable is not a function',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-02T09:16:02.718Z'
+}
+{
+  level: 'error',
+  message: 'TypeError: createUsersTable is not a function',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-02T09:16:02.724Z'
+}
+{
+  level: 'error',
+  message: 'Error accesing Database',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-02T09:16:02.725Z'
+}
+{
+  level: 'error',
+  message: 'TypeError: db is not a function',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-02T09:16:02.726Z'
+}

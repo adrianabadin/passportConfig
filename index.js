@@ -39,11 +39,8 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     let incorrectPasswordMessage;
     let userAlrreadyExistsMessage;
     let crypt = true;
-    let googleAuthModel;
-    //schemaObject.add(basicSchema)
-    /////////////////
-    //MODELS
-    googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema);
+    let hasVerificationFlag = false;
+    let notVerifiedMessage;
     ///////////////
     //FUNCTIONS
     //////////////
@@ -67,16 +64,24 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
         crypt = value;
         return this;
     }
+    function hasVerification() {
+        hasVerificationFlag = true;
+        return this;
+    }
+    function setNotVerifiedMessage(message) {
+        notVerifiedMessage = message;
+        return this;
+    }
     /////////BUILDERS///////////////////
     function buildLocalConfig() {
-        registerStrategy(DAOlocal, userAlrreadyExistsMessage, createHash, crypt);
+        registerStrategy(DAOlocal, userAlrreadyExistsMessage, createHash, crypt, hasVerificationFlag);
         passport.serializeUser((user, done) => {
             done(null, user._id);
         });
         passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
             yield DAOlocal.findById(id, done); //users.findById(id, done)
         }));
-        loginStrategy(DAOlocal, userNotFoundMessage, incorrectPasswordMessage, isValid);
+        loginStrategy(DAOlocal, userNotFoundMessage, incorrectPasswordMessage, isValid, notVerifiedMessage);
         return this;
     }
     function GoogleoAuth(authObject, loginOnly = false) {
@@ -97,6 +102,6 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
         });
         return this;
     }
-    return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, localModel: DAOlocal.model, goaModel: DAOgoa.model };
+    return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, hasVerification, setNotVerifiedMessage, localModel: DAOlocal.model, goaModel: DAOgoa.model };
 }
 module.exports = passportConfigBuilder;

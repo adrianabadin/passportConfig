@@ -30,12 +30,9 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
   let incorrectPasswordMessage:string
   let userAlrreadyExistsMessage:string
   let crypt = true
-  let googleAuthModel:any
+  let hasVerificationFlag:boolean=false
+  let notVerifiedMessage:string
 
-  //schemaObject.add(basicSchema)
-/////////////////
-//MODELS
-  googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema)
 
   ///////////////
   //FUNCTIONS
@@ -63,16 +60,24 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     crypt = value
     return this 
   }
+  function hasVerification (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn{
+    hasVerificationFlag=true
+    return this
+  }
+  function setNotVerifiedMessage(this:IpassportConfigBuilderReturn,message:string):IpassportConfigBuilderReturn{
+    notVerifiedMessage=message
+    return this
+  }
   /////////BUILDERS///////////////////
   function buildLocalConfig (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn {
-    registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt)
+    registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt,hasVerificationFlag)
     passport.serializeUser((user:Models, done:any) => {
       done(null, user._id)
     })
     passport.deserializeUser(async (id:string, done:any) => {
      await DAOlocal.findById(id,done) //users.findById(id, done)
     })
-    loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid)
+    loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid,notVerifiedMessage)
     return this
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
@@ -90,7 +95,7 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     })
     return this
   }
-  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }
+  return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,hasVerification,setNotVerifiedMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }
 }
 
 
