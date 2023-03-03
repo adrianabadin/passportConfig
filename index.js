@@ -39,13 +39,8 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     let incorrectPasswordMessage;
     let userAlrreadyExistsMessage;
     let crypt = true;
-    let googleAuthModel;
     let hasVerificationFlag = false;
     let notVerifiedMessage;
-    //schemaObject.add(basicSchema)
-    /////////////////
-    //MODELS
-    googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema);
     ///////////////
     //FUNCTIONS
     //////////////
@@ -86,7 +81,7 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
         passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
             yield DAOlocal.findById(id, done); //users.findById(id, done)
         }));
-        loginStrategy(DAOlocal, userNotFoundMessage, incorrectPasswordMessage, isValid);
+        loginStrategy(DAOlocal, userNotFoundMessage, incorrectPasswordMessage, isValid, notVerifiedMessage);
         return this;
     }
     function GoogleoAuth(authObject, loginOnly = false) {

@@ -30,14 +30,9 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
   let incorrectPasswordMessage:string
   let userAlrreadyExistsMessage:string
   let crypt = true
-  let googleAuthModel:any
   let hasVerificationFlag:boolean=false
   let notVerifiedMessage:string
 
-  //schemaObject.add(basicSchema)
-/////////////////
-//MODELS
-  googleAuthModel = mongoose.model('usersGoogleAuthModel', googleAuthSchema)
 
   ///////////////
   //FUNCTIONS
@@ -82,7 +77,7 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     passport.deserializeUser(async (id:string, done:any) => {
      await DAOlocal.findById(id,done) //users.findById(id, done)
     })
-    loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid)
+    loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid,notVerifiedMessage)
     return this
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {

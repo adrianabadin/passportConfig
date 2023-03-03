@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SqlDAO = void 0;
 const loggerHLP_1 = require("../helper/loggerHLP");
 /*
 Constructor options:
@@ -258,4 +257,4 @@ class SqlDAO {
         this.dbSchema = dbSchema;
     }
 }
-exports.SqlDAO = SqlDAO;
+exports.default = SqlDAO;

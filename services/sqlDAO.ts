@@ -11,7 +11,7 @@ Needs 2 params
 serves to establish wich model is generating
 }
 */
-export class SqlDAO implements IDAO {
+class SqlDAO implements IDAO {
     protected db:Knex
     protected dbSchema:ISqlSchema
     constructor(
@@ -193,3 +193,5 @@ export class SqlDAO implements IDAO {
         this.dbSchema=dbSchema
     }
 }
+
+module.exports= SqlDAO
