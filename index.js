@@ -8,9 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const selectorDAO_1 = require("./services/selectorDAO");
+const selectorDAO_1 = __importDefault(require("./services/selectorDAO"));
+//const DAOSelectorObject=DAOs as unknown as DAOs.default
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
@@ -33,8 +37,8 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     //////////////////
     //variables
     /////////////////
-    const DAOlocal = new selectorDAO_1.DAOSelector(schemaObject, "localSchema")[dbType]; // DaoMongo(schemaObject,"localSchema")
-    const DAOgoa = new selectorDAO_1.DAOSelector(schemaObject, "goaSchema")[dbType]; //DaoMongo(schemaObject,"goaSchema")
+    const DAOlocal = new selectorDAO_1.default[dbType](schemaObject, "localSchema"); // DaoMongo(schemaObject,"localSchema")
+    const DAOgoa = new selectorDAO_1.default[dbType](schemaObject, "goaSchema"); //DaoMongo(schemaObject,"goaSchema")
     let userNotFoundMessage = "";
     let incorrectPasswordMessage;
     let userAlrreadyExistsMessage;

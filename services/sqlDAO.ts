@@ -39,7 +39,7 @@ class SqlDAO implements IDAO {
                table.string('password')
                table.boolean('isVerified')
                 Object.keys(dbSchema).forEach((key:string)=>{
-                    const keyValue = dbSchema[key] as ISqlTypes
+                    const keyValue = dbSchema[key].toLowerCase() as ISqlTypes
                     table.primary
                     if (key!=='username' && key!=='password'&& key!=='isVerified' && key!=='_id'){ 
                         if (typeof table[keyValue]=="function") table[keyValue](key)}

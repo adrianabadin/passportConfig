@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DAOSelector = void 0;
 const MongoDAO = require('./mongoDAO');
 const SqlDAO = require('./sqlDAO');
 console.log(SqlDAO);
 class DAOSelector {
-    constructor(schemaObject, schemaType, MONGO = new MongoDAO(schemaObject, schemaType), SQL = new SqlDAO(schemaObject, schemaType)) {
+    constructor(MONGO = MongoDAO, SQL = SqlDAO) {
         this.MONGO = MONGO;
         this.SQL = SQL;
     }
 }
-exports.DAOSelector = DAOSelector;
+const DAOSelectorObject = new DAOSelector();
+exports.default = DAOSelectorObject;

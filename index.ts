@@ -1,7 +1,8 @@
 import { Models,Schema as SchemaType} from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import { IgoogleUser, IpassportConfigBuilderReturn, IlocalSchema, IDAO } from './types';
-import { DAOSelector } from './services/selectorDAO';
+import { IgoogleUser, IpassportConfigBuilderReturn, IlocalSchema, IDAO, IDAOSelector } from './types';
+import DAOSelectorObject from './services/selectorDAO';
+//const DAOSelectorObject=DAOs as unknown as DAOs.default
 const passport =require( 'passport')
 const bcrypt=require( 'bcrypt')
 const mongoose=require( 'mongoose')
@@ -24,8 +25,8 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
 //////////////////
 //variables
 /////////////////
-  const DAOlocal=new DAOSelector(schemaObject,"localSchema")[dbType] // DaoMongo(schemaObject,"localSchema")
-  const DAOgoa=new DAOSelector(schemaObject,"goaSchema")[dbType]//DaoMongo(schemaObject,"goaSchema")
+  const DAOlocal=new DAOSelectorObject[dbType](schemaObject,"localSchema") // DaoMongo(schemaObject,"localSchema")
+  const DAOgoa=new DAOSelectorObject[dbType](schemaObject,"goaSchema")//DaoMongo(schemaObject,"goaSchema")
   let userNotFoundMessage:string =""
   let incorrectPasswordMessage:string
   let userAlrreadyExistsMessage:string
