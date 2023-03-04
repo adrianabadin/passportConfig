@@ -40,7 +40,9 @@ app.listen(8080, () => console.log("Server Up"));
 ```
 
 At this time we need to initialize the express session middleware:
+Use the session store adecuate to your database of choice, at the time **Mongo DB** or **SQL with Knex JS**
 
+**MONGO SESSION**
 ```javascript
 const baseSession = session({
   store: MongoStore.create({
@@ -50,6 +52,18 @@ const baseSession = session({
   resave: true,
   saveUninitialized: true,
 });
+```
+**KNEXJS SESSION**
+```javascript
+const KnexSessionStore = require('connect-session-knex')(session)
+const store = KnexSessionStore({tablename:'users'})
+const sesssionMiddleware = session({
+    store,
+    secret: 'Lorem Ipsum',
+    cookie: { maxAge: 600000 },
+    resave: false,
+    saveUninitialized: false
+  })
 ```
 
 Before we initialize the session middleware we should call the express.json() middleware to be able to access body data:
@@ -77,6 +91,9 @@ const basicSchema = {
     type: String,
     required: true,
   },
+  isVerified:{
+    type:Boolean
+  }
 };
 ```
 
@@ -86,14 +103,23 @@ To call the implementation of our configuration you need to call the method **bu
 
 So the basic configuration for this implementation would be :
 
+**MONGO**
 ```javascript
 passportConfigBuilder(new Schema({}),"MONGO").buildLocalConfig();
 ```
 
+**KNEX JS**
+```javascript
+passportConfigBuilder({db:KnexConnection,
+  dbSchema:{
+    email:"string",
+    age:"integer"
+}},"SQL").buildLocalConfig();
+```
 And if you need other fields on the login form you should do this:
 
 ```javascript
-passportConfigBuilder(Schema({
+passportConfigBuilder(new Schema({
 	firstName:String,
 	lastName:String,
 	age:Number
@@ -153,6 +179,9 @@ The function returns 5 elements:
 6. **setUserNotFoundMessage** **method** sets custom error user not found message
 7. **setIncorrectPassword** **method** sets custom error for incorrect password message
 8. **setUserAlrreadyExistsMessage** **method** sets custom error for user already exists message
+9. **hasVerification** **method** enables verification to login implementation ti requires a field isVerified to be true before autenticathing a user even if the username and password are correct 
+10. **setNotVerifiedMessag** **method** Sets custom message to be displayed when isVerified is set to false 
+
 
 ### Google oAuth 2.0 Strategy for passport JS
 
