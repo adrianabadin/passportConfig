@@ -31,36 +31,43 @@ class MongoDAO implements IDAO{
           //Funciones que deben ser iguales
           public model:Model<any>  = isLocal ? mongoose.model('localCollection',db.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema),
           public findById=async (id:string,cb:any):Promise<any> =>{
-            loggerObject.debug.debug({level:"debug",message:"findById"})
             try{
-            this.model.findById(id,cb)
-          }catch(e){loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})}
+            const data = await this.model.findById(id)
+            loggerObject.debug.debug({level:"debug",message:"findById:",data,DAOName:"MongoDAO"})
+            cb(null,data)
+              //this.model.findById(id,cb)
+          }catch(e){loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`,method:"findById"})}
           },
           public findByUserName=async (username:string):Promise<any> =>{
-            loggerObject.debug.debug({level:"debug",message:"findByUserName"})
- 
+             
             try {
-              return await this.model.findOne({username})
+              const data =await this.model.findOne({username})
+              loggerObject.debug.debug({level:"debug",message:"findByUserName",data,DAOName:"MongoDAO"})
+              return data
           }catch(e)
           {
-            loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})
+            loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`,method:"findByUserName"})
           } 
           },
           public createUser=async (user:any):Promise<any>=>{
-            loggerObject.debug.debug({level:"debug",message:"createUser"})
+            
             try {
-              return await this.model.create(user)
+              const data =await this.model.create(user)
+              loggerObject.debug.debug({level:"debug",message:"createUser",data,DAOName:"MongoDAO"})  
+              return data
             }
             catch(e){
-              loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})
+              loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`,method:"createUser",})
             } 
           },
           public returnFields= ():string[]|ErrorMessage=> {
             loggerObject.debug.debug({level:"debug",message:"returnFields"})
             try {
-              return Object.keys(this.model.schema.obj)
+              const data=Object.keys(this.model.schema.obj)
+              loggerObject.debug.debug({level:"debug",message:"returnFields",data,DAOName:"MongoDAO"})
+              return data
             } 
-            catch(e){loggerObject.error.error({level: "error",message:`${e}`})
+            catch(e){loggerObject.error.error({level: "error",message:`${e}`,method:"returnFields"})
             return {message:"Something went wrong while retriving schema fields",error:`${e}`}
           }
           }

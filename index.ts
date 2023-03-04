@@ -1,11 +1,11 @@
 import { Models,Schema as SchemaType} from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import { IgoogleUser, IpassportConfigBuilderReturn, IlocalSchema, IDAO, IDAOSelector } from './types';
+import {  IpassportConfigBuilderReturn, IlocalSchema } from './types';
 import DAOSelectorObject from './services/selectorDAO';
+import { loggerObject } from './helper/loggerHLP';
 //const DAOSelectorObject=DAOs as unknown as DAOs.default
 const passport =require( 'passport')
 const bcrypt=require( 'bcrypt')
-const mongoose=require( 'mongoose')
 const GoogleStrategy=require( 'passport-google-oauth20').Strategy
 const {registerStrategy,loginStrategy} = require('./strategies/local')
 const oAuthModes=require('./strategies/oAuth2')
@@ -64,7 +64,7 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
   function buildLocalConfig (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn {
     registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt,hasVerificationFlag)
     passport.serializeUser(async (user:Models, done:any) => {
-      console.log("Serializing ",await user["_id"])
+      loggerObject.debug.debug({level:"debug",message:"serializeUser",data:await user["_id"]})
       done(null,await user._id)
     })
     passport.deserializeUser(async (id:string, done:any) => {
@@ -78,8 +78,8 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     const {justLogin,loginAndRegister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
     passport.use(new GoogleStrategy(authObject,
       (loginOnly) ? justLogin : loginAndRegister))
-    passport.serializeUser((user:Models, done:any) => {
-      done(null, user._id)
+    passport.serializeUser(async (user:Models, done:any) => {
+      done(null,await user._id)
     })
     passport.deserializeUser((id:string, done:any) => {
      if (loginOnly){DAOlocal.findById(id,done)}

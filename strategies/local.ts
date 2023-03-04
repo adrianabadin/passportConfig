@@ -11,6 +11,7 @@ function registerStrategy(DAO:IDAO,userAlrreadyExistsMessage:string,createHash:a
         { passReqToCallback: true },
         async (req:Request, username:string, password:string, done:any) => {
           try {
+            loggerObject.debug.debug({level:"debug",message:"Register Local Strategy"})
             const user = await DAO.findByUserName(username) //await users.findOne({ username })
             if (user) return done(null, false, 
               { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` })
@@ -22,9 +23,11 @@ function registerStrategy(DAO:IDAO,userAlrreadyExistsMessage:string,createHash:a
              
               return done(null, result)//.findOne(id)
             } catch (err) {
+              loggerObject.error.error({level:"Error",message:"Database error creating user",err})
               done(err,null,{message:"Imposible to register new user"})
             }
           } catch (err) {
+            loggerObject.error.error({level:"Error",message:"Database error creating user",err})
             done(err,null,{message:"Imposible to register new user"})
           }
         })
@@ -37,7 +40,9 @@ function loginStrategy(DAO:IDAO,userNotFoundMessage:string,incorrectPasswordMess
       new LocalStrategy(
         async (username:string, password:string, done:any) => {
           try {
+            loggerObject.debug.debug({level:"debug",message:"Login Local Strategy"})
             const user = await DAO.findByUserName(username)//users.findOne({ username })
+            loggerObject.debug.debug({level:"debug",message:"Login User Data",data:user})
             if (!user) return done(null, false, { message: userNotFoundMessage || `User ${username} not found` })
             //aca va el if que verifica si el usuario fue confirmado
             if (user.isVerified){ 
@@ -58,7 +63,7 @@ function loginStrategy(DAO:IDAO,userNotFoundMessage:string,incorrectPasswordMess
   }
   async function loginObjectCreator(fields:string[]|ErrorMessage | Promise<string[]|ErrorMessage>,req:Request){
   let objeto:any 
-  loggerObject.debug.debug({level:"debug",message:`loginObjectCreator`})
+  
   try{
   if (Array.isArray(await fields)===true) {
   const fieldsObject:string[] = await fields as string[]
@@ -66,9 +71,12 @@ function loginStrategy(DAO:IDAO,userNotFoundMessage:string,incorrectPasswordMess
   if (req.body !==null && req.body[keyValue as keyof ReadableStream<any>]!==undefined){ 
     objeto={...objeto,[keyValue]:req.body[keyValue as keyof ReadableStream<any>]}}
   })
+  loggerObject.debug.debug({level:"debug",message:`loginObjectCreator`,data:objeto})
   return objeto
 }
-else {return {message:"Something went wrong while retriving fields from model",error:fields}
+else {
+  loggerObject.error.error({level:"error",method:"loginObjectCreator",message:"Missing Data"})
+  return {message:"Something went wrong while retriving fields from model",error:fields}
   }
 }catch(e){loggerObject.error.error({level:"error",message:`${e}`})}
 }
