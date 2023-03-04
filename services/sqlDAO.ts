@@ -163,7 +163,8 @@ class SqlDAO implements IDAO {
        try{
         loggerObject.debug.debug({level:"debug",message:"findByUserName"})
         await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")               
-        return await db((schemaType==="localSchema") ?"users":"goa").where("username",username).select("*")
+        const data =await db((schemaType==="localSchema") ?"users":"goa").where("username",username).select("*")
+        return (data.length >0) ?data[0] : false
     }  catch(error){loggerObject.error.error({level:"error",message:"Error accesing Database"})}
         
       },
@@ -172,7 +173,11 @@ class SqlDAO implements IDAO {
             loggerObject.debug.debug({level:"debug",message:"createUser"})
 
         await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")    
-        return await db.insert(user).into((schemaType==="localSchema") ?"users":"goa")}
+        const data = await db.insert(user).into((schemaType==="localSchema") ?"users":"goa").then(
+           async ()=> await db((schemaType==="localSchema") ?"users":"goa").where("username",user.username).select("*") 
+        ).catch(error=>loggerObject.error.error({level: "error",message:(error.errno===19)? "UserName already exists": `${error}`}))
+        console.log(await data)
+        return (Array.isArray(data)) ? data[0] :data}
         catch(error:any){loggerObject.error.error({level: "error",message:(error.errno===19)? "UserName already exists": `${error}`})}
       },
       public returnFields=async():Promise<string[] | ErrorMessage>=>{

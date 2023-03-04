@@ -41,7 +41,7 @@ function loginStrategy(DAO, userNotFoundMessage, incorrectPasswordMessage, isVal
             if (!user)
                 return done(null, false, { message: userNotFoundMessage || `User ${username} not found` });
             //aca va el if que verifica si el usuario fue confirmado
-            if (user.isVerified === true) {
+            if (user.isVerified) {
                 if (!isValid(user, password)) {
                     return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` });
                 }

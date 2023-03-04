@@ -39,7 +39,7 @@ class SqlDAO {
                         table.string('password');
                         table.boolean('isVerified');
                         Object.keys(dbSchema).forEach((key) => {
-                            const keyValue = dbSchema[key];
+                            const keyValue = dbSchema[key].toLowerCase();
                             table.primary;
                             if (key !== 'username' && key !== 'password' && key !== 'isVerified' && key !== '_id') {
                                 if (typeof table[keyValue] == "function")
@@ -215,7 +215,8 @@ class SqlDAO {
         try {
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findByUserName" });
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
-            return yield db((schemaType === "localSchema") ? "users" : "goa").where("username", username).select("*");
+            const data = yield db((schemaType === "localSchema") ? "users" : "goa").where("username", username).select("*");
+            return (data.length > 0) ? data[0] : false;
         }
         catch (error) {
             loggerHLP_1.loggerObject.error.error({ level: "error", message: "Error accesing Database" });
@@ -224,7 +225,9 @@ class SqlDAO {
         try {
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "createUser" });
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
-            return yield db.insert(user).into((schemaType === "localSchema") ? "users" : "goa");
+            const data = yield db.insert(user).into((schemaType === "localSchema") ? "users" : "goa").then(() => __awaiter(this, void 0, void 0, function* () { return yield db((schemaType === "localSchema") ? "users" : "goa").where("username", user.username).select("*"); })).catch(error => loggerHLP_1.loggerObject.error.error({ level: "error", message: (error.errno === 19) ? "UserName already exists" : `${error}` }));
+            console.log(yield data);
+            return (Array.isArray(data)) ? data[0] : data;
         }
         catch (error) {
             loggerHLP_1.loggerObject.error.error({ level: "error", message: (error.errno === 19) ? "UserName already exists" : `${error}` });

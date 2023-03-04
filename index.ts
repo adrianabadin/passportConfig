@@ -11,16 +11,7 @@ const {registerStrategy,loginStrategy} = require('./strategies/local')
 const oAuthModes=require('./strategies/oAuth2')
 ////////////////
 //SCHEMAS
-const googleAuthSchema = new SchemaType<IgoogleUser>({
-  username: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  name: String,
-  lastName: String,
-  avatar: String
-})
+
 function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "MONGO" ="MONGO"): IpassportConfigBuilderReturn {
 //////////////////
 //variables
@@ -72,8 +63,9 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
   /////////BUILDERS///////////////////
   function buildLocalConfig (this:IpassportConfigBuilderReturn):IpassportConfigBuilderReturn {
     registerStrategy(DAOlocal,userAlrreadyExistsMessage,createHash,crypt,hasVerificationFlag)
-    passport.serializeUser((user:Models, done:any) => {
-      done(null, user._id)
+    passport.serializeUser(async (user:Models, done:any) => {
+      console.log("Serializing ",await user["_id"])
+      done(null,await user._id)
     })
     passport.deserializeUser(async (id:string, done:any) => {
      await DAOlocal.findById(id,done) //users.findById(id, done)

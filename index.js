@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = require("mongoose");
 const selectorDAO_1 = __importDefault(require("./services/selectorDAO"));
 //const DAOSelectorObject=DAOs as unknown as DAOs.default
 const passport = require('passport');
@@ -23,16 +22,6 @@ const { registerStrategy, loginStrategy } = require('./strategies/local');
 const oAuthModes = require('./strategies/oAuth2');
 ////////////////
 //SCHEMAS
-const googleAuthSchema = new mongoose_1.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    name: String,
-    lastName: String,
-    avatar: String
-});
 function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     //////////////////
     //variables
@@ -79,9 +68,10 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     /////////BUILDERS///////////////////
     function buildLocalConfig() {
         registerStrategy(DAOlocal, userAlrreadyExistsMessage, createHash, crypt, hasVerificationFlag);
-        passport.serializeUser((user, done) => {
-            done(null, user._id);
-        });
+        passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
+            console.log("Serializing ", yield user["_id"]);
+            done(null, yield user._id);
+        }));
         passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
             yield DAOlocal.findById(id, done); //users.findById(id, done)
         }));

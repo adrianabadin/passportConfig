@@ -19,6 +19,7 @@ function registerStrategy(DAO:IDAO,userAlrreadyExistsMessage:string,createHash:a
             
             try {
               const result = await DAO.createUser(newUser) //users.create(newUser)
+             
               return done(null, result)//.findOne(id)
             } catch (err) {
               done(err,null,{message:"Imposible to register new user"})
@@ -39,7 +40,7 @@ function loginStrategy(DAO:IDAO,userNotFoundMessage:string,incorrectPasswordMess
             const user = await DAO.findByUserName(username)//users.findOne({ username })
             if (!user) return done(null, false, { message: userNotFoundMessage || `User ${username} not found` })
             //aca va el if que verifica si el usuario fue confirmado
-            if (user.isVerified===true){ 
+            if (user.isVerified){ 
             if (!isValid(user, password)) 
             {
               return done(null, false, { message: incorrectPasswordMessage || `Password provided doesnt match the one stored for ${username}` })
