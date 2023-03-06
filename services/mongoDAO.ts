@@ -1,9 +1,9 @@
 import mongoose, {  Model, Query, Schema } from "mongoose";
-import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage } from '../types';
+import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage, IdbConnectionObject } from '../types';
 import {loggerObject} from '../helper/loggerHLP'
 class MongoDAO implements IDAO{
     constructor(
-        protected db: Schema<IlocalSchema> | Schema<IgoogleUser>,
+        protected db: Schema<IlocalSchema> | Schema<IgoogleUser> | IdbConnectionObject,
         protected schemaType: "goaSchema" |"localSchema",
         protected basicSchema= new Schema<IlocalSchema>({
             username: {
@@ -29,6 +29,16 @@ class MongoDAO implements IDAO{
           }),
           protected isLocal = (schemaType==='localSchema'),
           //Funciones que deben ser iguales
+          protected createModel=async ()=>{
+            if ("db" in this.db && "dbSchema" in this.db) {
+              if (typeof this.db.db === "string"){               mongoose.set("strictQuery",false)
+              return await mongoose.connect(this.db.db).then(()=>{
+                return isLocal ? mongoose.model('localCollection',db.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema)
+              })
+            }
+          }
+
+          },
           public model:Model<any>  = isLocal ? mongoose.model('localCollection',db.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema),
           public findById=async (id:string,cb:any):Promise<any> =>{
             loggerObject.debug.debug({level:"debug",message:"findById"})

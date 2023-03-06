@@ -29,7 +29,8 @@ interface TableBuilderTypes {
     datetime: (columnName?: string) => ColumnBuilder;
 
 }
-export type SqlDestructuring={
+
+export type IdbConnectionObject={
     db:Knex
     dbSchema:ISqlSchema
 
