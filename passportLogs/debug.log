@@ -1,0 +1,14 @@
+{
+  level: 'debug',
+  message: 'returnFields',
+  model: Model { localCollection },
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-11T22:22:42.300Z'
+}
+{
+  level: 'debug',
+  message: 'returnFields',
+  response: [ 'phone' ],
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-11T22:22:42.308Z'
+}
