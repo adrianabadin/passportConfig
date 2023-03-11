@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MongoDAO = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const loggerHLP_1 = require("../helper/loggerHLP");
 class MongoDAO {
@@ -60,6 +61,10 @@ class MongoDAO {
             return true;
         else
             return false;
+    }, isModel = (data) => {
+        if ("schema" in data && "findOne" in data && "findById" in data)
+            return true; // && "findOne" in data && "save" in data ) return true 
+        return false;
     }, isDbConnected = () => {
         return mongoose_1.default.connection.readyState === 2;
     }, isDbConnectionSchema = (db) => {
@@ -69,24 +74,24 @@ class MongoDAO {
                     let response;
                     try {
                         const schema = new mongoose_1.Schema(db.dbSchema);
-                        response = true;
+                        response = false;
                     }
                     catch (e) {
-                        response = false;
+                        response = e;
                     }
                     return response;
                 }
             }
         }
         return false;
-    }, ClassBuilder = () => {
+    }, ClassBuilder = () => __awaiter(this, void 0, void 0, function* () {
         let dataSchema;
         let dbConnectionObject;
         if (isSchema(db)) {
             dataSchema = db;
             this.model = isLocal ? mongoose_1.default.model('localCollection', dataSchema.add(basicSchema)) : mongoose_1.default.model('goaCollection', gooogleOauthSchema);
         }
-        else if (isDbConnectionSchema(db)) {
+        else if (!isDbConnectionSchema(db)) {
             dbConnectionObject = db;
             let schema = new mongoose_1.Schema(dbConnectionObject.dbSchema);
             schema.add(basicSchema);
@@ -143,8 +148,9 @@ class MongoDAO {
             }
         });
         this.returnFields = () => {
-            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "returnFields" });
-            if (this.model instanceof (mongoose_1.default.model)) {
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "returnFields", model: this.model });
+            // console.log(this.model,isModel(this.model))
+            if (isModel(this.model)) {
                 const response = Object.keys(this.model.schema.obj);
                 loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "returnFields", response });
                 return response;
@@ -155,30 +161,39 @@ class MongoDAO {
             }
         };
         ////FIN DE CLASSBUILDER  
-    }) {
+    })) {
         this.db = db;
         this.schemaType = schemaType;
         this.basicSchema = basicSchema;
         this.gooogleOauthSchema = gooogleOauthSchema;
         this.isLocal = isLocal;
         this.isSchema = isSchema;
+        this.isModel = isModel;
         this.isDbConnected = isDbConnected;
         this.isDbConnectionSchema = isDbConnectionSchema;
         this.ClassBuilder = ClassBuilder;
-        const data = db;
-        if (isSchema(db)) {
-            if (isDbConnected())
-                ClassBuilder();
+        this.createInstance = () => __awaiter(this, void 0, void 0, function* () {
+            if (MongoDAO.Instance === undefined) {
+                MongoDAO.Instance = new MongoDAO(db, schemaType);
+                yield MongoDAO.Instance.ClassBuilder();
+            }
+            return MongoDAO.Instance;
+        });
+        const data = this.db;
+        if (this.isSchema(db)) {
+            if (this.isDbConnected()) {
+                this.createInstance();
+            }
             else
                 throw new Error("Db must be conected before if you are using a Schema as param");
         }
         else {
-            if (isDbConnectionSchema(data.dbSchema)) {
+            if (!isDbConnectionSchema(data.dbSchema)) {
                 mongoose_1.default.set("strictQuery", false);
                 mongoose_1.default.connect(data.db)
                     .then(() => {
                     loggerHLP_1.loggerObject.info.info({ level: "info", message: "Connected to MongoDB" });
-                    ClassBuilder();
+                    this.createInstance();
                 })
                     .catch(error => {
                     loggerHLP_1.loggerObject.error.error({ level: "error", message: "Error Connecting to Mongo DB", error });
@@ -189,7 +204,7 @@ class MongoDAO {
         }
     }
 }
-module.exports = MongoDAO;
+exports.MongoDAO = MongoDAO;
 //Funciones que deben ser iguales
 //  public model:Model<any>  = isLocal ? mongoose.model('localCollection',db.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema),
 //public findById=async (id:string,cb:any):Promise<any> =>{

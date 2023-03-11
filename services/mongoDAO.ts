@@ -2,12 +2,14 @@ import mongoose, {  Model, Schema} from "mongoose";
 import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage,  ImongoDB,IfindByIdError, MongooseCreateError } from '../types';
 import {loggerObject} from '../helper/loggerHLP'
 
-class MongoDAO implements IDAO{
+export class MongoDAO implements IDAO{
   public model!:Model<any>  
   public findById!:(id:string,cb:any)=>Promise<any>
   public findByUserName!: (username:string)=>Promise<any>
   public createUser!:(user:any)=>Promise<any>
   public returnFields!: ()=>string[]|ErrorMessage
+  static Instance: any
+  public createInstance :()=>any
   constructor(
         protected db: Schema<IlocalSchema> | Schema<IgoogleUser> | ImongoDB,
         protected schemaType: "goaSchema" |"localSchema",
@@ -38,18 +40,23 @@ class MongoDAO implements IDAO{
             if (data instanceof Schema)  return true
             else return false
             },
+            protected isModel=(data:any):boolean=>{
+              if ("schema" in data && "findOne" in data && "findById" in data) return true // && "findOne" in data && "save" in data ) return true 
+
+              return false
+            },
             protected isDbConnected=():boolean=>{
               return mongoose.connection.readyState ===2
             },
-            protected isDbConnectionSchema= (db:any):boolean =>{
+            protected isDbConnectionSchema= (db:any):unknown =>{
              if (!isSchema(db)) { 
               if ("db" in db && "dbSchema" in db) {
                 if(typeof db["db"] ==="string"){
                   let response
                        try{
                         const schema=new Schema(db.dbSchema)
-                        response =true
-                       }catch(e){response=false}
+                        response =false
+                       }catch(e){response=e}
                 return response
                       }
 
@@ -58,7 +65,7 @@ class MongoDAO implements IDAO{
              return false
 
             },
-           protected ClassBuilder=():void=>{
+           protected ClassBuilder=async ():Promise<void>=>{
             let dataSchema:Schema<IlocalSchema|IgoogleUser> 
             let dbConnectionObject:ImongoDB
 
@@ -66,7 +73,7 @@ class MongoDAO implements IDAO{
             {
               dataSchema = db as Schema<IlocalSchema|IgoogleUser> 
               this.model=isLocal ? mongoose.model('localCollection',dataSchema.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema)
-            } else if (isDbConnectionSchema(db)){
+            } else if (!isDbConnectionSchema(db)){
               dbConnectionObject=db as ImongoDB
               let schema = new Schema(dbConnectionObject.dbSchema)
               schema.add(basicSchema)
@@ -120,8 +127,9 @@ class MongoDAO implements IDAO{
                 } 
               }
               this.returnFields= ():string[]|ErrorMessage=> {
-                  loggerObject.debug.debug({level:"debug",message:"returnFields"})
-                  if (this.model instanceof(mongoose.model)) {
+                  loggerObject.debug.debug({level:"debug",message:"returnFields",model: this.model})
+                  // console.log(this.model,isModel(this.model))
+                  if (isModel(this.model)) {
                     const response = Object.keys(this.model.schema.obj)
                     loggerObject.debug.debug({level:"debug",message:"returnFields",response})  
                     return response
@@ -134,31 +142,44 @@ class MongoDAO implements IDAO{
           ////FIN DE CLASSBUILDER  
         }
 
-          
-          ){
-            const data:ImongoDB =db as ImongoDB;
 
-            if (isSchema(db as ImongoDB)){
-              if (isDbConnected()) ClassBuilder()
+          
+          ){        
+              this.createInstance=async ():Promise<any>=>{
+                if(MongoDAO.Instance === undefined){
+                MongoDAO.Instance = new MongoDAO(db,schemaType)
+                await MongoDAO.Instance.ClassBuilder()}
+                return MongoDAO.Instance
+            }          
+            const data:ImongoDB =this.db as ImongoDB;
+  
+            if (this.isSchema(db as ImongoDB)){
+              if (this.isDbConnected()) {this.createInstance()
+              
+              }
               else throw new Error("Db must be conected before if you are using a Schema as param")
             }
             else {
-              if (isDbConnectionSchema(data.dbSchema)){
+              if (!isDbConnectionSchema(data.dbSchema)){
+
                 mongoose.set("strictQuery",false)
                 mongoose.connect(data.db)
                   .then(()=>{
                     loggerObject.info.info({level:"info",message:"Connected to MongoDB"})
-                    ClassBuilder()
+                    this.createInstance()
+          
                   })
                   .catch(error=>{
                     loggerObject.error.error({level:"error",message:"Error Connecting to Mongo DB",error})
                 })
               }else throw new Error("The params provided should be a mongoose schema or a configuration object containig the following structure {db:'Conection String',dbSchema:{a valid schema definition}}")
-            }
-          }
+            }           
           
+                    
+           
+        }
+
 }
-module.exports = MongoDAO
 
 
 

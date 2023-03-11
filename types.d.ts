@@ -62,6 +62,8 @@ findById: (id:string,cb:any)=>Promise<any>,
 findByUserName:(userName:string)=>Promise<any>,
 createUser:(user:any)=>Promise<any>
 returnFields:() => string[]|ErrorMessage|Promise<string[]|ErrorMessage>
+Instance?:any
+createInstance?:()=>any
 }
 export type ErrorMessage ={
     message:string

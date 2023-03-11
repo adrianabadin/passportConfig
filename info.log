@@ -10,3 +10,15 @@
   label: 'Logged by passport-fast-config',
   timestamp: '2023-03-02T09:16:02.722Z'
 }
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-11T14:28:20.775Z'
+}
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-11T14:29:58.443Z'
+}
