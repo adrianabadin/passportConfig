@@ -16,6 +16,7 @@ const LocalStrategy = local.Strategy;
 function registerStrategy(DAO, userAlrreadyExistsMessage, createHash, crypt, hasVerificationFlag) {
     passport.use('register', new LocalStrategy({ passReqToCallback: true }, (req, username, password, done) => __awaiter(this, void 0, void 0, function* () {
         try {
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "Register Local Strategy" });
             const user = yield DAO.findByUserName(username); //await users.findOne({ username })
             if (user)
                 return done(null, false, { message: userAlrreadyExistsMessage || `Username ${username} alrready exists` });
@@ -26,10 +27,12 @@ function registerStrategy(DAO, userAlrreadyExistsMessage, createHash, crypt, has
                 return done(null, result); //.findOne(id)
             }
             catch (err) {
+                loggerHLP_1.loggerObject.error.error({ level: "Error", message: "Database error creating user", err });
                 done(err, null, { message: "Imposible to register new user" });
             }
         }
         catch (err) {
+            loggerHLP_1.loggerObject.error.error({ level: "Error", message: "Database error creating user", err });
             done(err, null, { message: "Imposible to register new user" });
         }
     })));
@@ -37,7 +40,9 @@ function registerStrategy(DAO, userAlrreadyExistsMessage, createHash, crypt, has
 function loginStrategy(DAO, userNotFoundMessage, incorrectPasswordMessage, isValid, notVerifiedMessage) {
     passport.use('login', new LocalStrategy((username, password, done) => __awaiter(this, void 0, void 0, function* () {
         try {
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "Login Local Strategy" });
             const user = yield DAO.findByUserName(username); //users.findOne({ username })
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "Login User Data", data: user });
             if (!user)
                 return done(null, false, { message: userNotFoundMessage || `User ${username} not found` });
             //aca va el if que verifica si el usuario fue confirmado
@@ -58,7 +63,6 @@ function loginStrategy(DAO, userNotFoundMessage, incorrectPasswordMessage, isVal
 function loginObjectCreator(fields, req) {
     return __awaiter(this, void 0, void 0, function* () {
         let objeto;
-        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: `loginObjectCreator` });
         try {
             if (Array.isArray(yield fields) === true) {
                 const fieldsObject = yield fields;
@@ -67,9 +71,11 @@ function loginObjectCreator(fields, req) {
                         objeto = Object.assign(Object.assign({}, objeto), { [keyValue]: req.body[keyValue] });
                     }
                 });
+                loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: `loginObjectCreator`, data: objeto });
                 return objeto;
             }
             else {
+                loggerHLP_1.loggerObject.error.error({ level: "error", method: "loginObjectCreator", message: "Missing Data" });
                 return { message: "Something went wrong while retriving fields from model", error: fields };
             }
         }

@@ -89,41 +89,47 @@ class SqlDAO {
                 if (table === "users") {
                     try {
                         const id = yield db.schema.hasColumn(table, "_id");
-                        console.log("id :", id);
-                        if (!(yield db.schema.hasColumn(table, "_id")))
+                        if (!(yield db.schema.hasColumn(table, "_id"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.increments("_id");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "ID added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing _id field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "username")))
+                        if (!(yield db.schema.hasColumn(table, "username"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("username").unique();
-                                console.log("username");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "username added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing username field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "password")))
+                        if (!(yield db.schema.hasColumn(table, "password"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("password");
                                 console.log("pass");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "password added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing password field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "isVerified")))
+                        if (!(yield db.schema.hasColumn(table, "isVerified"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.boolean("isVerified");
                                 console.log("veri");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "isVerified added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing isVerified field" });
@@ -131,55 +137,67 @@ class SqlDAO {
                 }
                 else if (table === "goa") {
                     try {
-                        if (!(yield db.schema.hasColumn(table, "_id")))
+                        if (!(yield db.schema.hasColumn(table, "_id"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.increments("_id");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "ID added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing _id field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "username")))
+                        if (!(yield db.schema.hasColumn(table, "username"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("username").unique();
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "username added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing username field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "password")))
+                        if (!(yield db.schema.hasColumn(table, "password"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("password");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "password added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing password field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "name")))
+                        if (!(yield db.schema.hasColumn(table, "name"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("name");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "name added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing name field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "lastname")))
+                        if (!(yield db.schema.hasColumn(table, "lastname"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("lastname");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "lastname added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing lastname field" });
                     }
                     try {
-                        if (!(yield db.schema.hasColumn(table, "avatar")))
+                        if (!(yield db.schema.hasColumn(table, "avatar"))) {
                             yield this.db.schema.alterTable(table, (tableBuilder) => {
                                 tableBuilder.string("avatar");
                             });
+                            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "avatar added" });
+                        }
                     }
                     catch (e) {
                         loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}`, title: "Error by verifing avatar field" });
@@ -200,22 +218,21 @@ class SqlDAO {
             loggerHLP_1.loggerObject.error.error({ level: "error", title: "Error verifing table structure", message: `${error}` });
         }
     }), model = db((schemaType === "localSchema") ? "users" : "goa"), findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
-        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findById" });
         try {
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
+            yield db((schemaType === "localSchema") ? "users" : "goa").where("_id", `${id}`).select("*").then((response) => {
+                loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findById", data: response, DAOName: "SqlDAO" });
+                cb(null, response);
+            }).catch((error) => cb(error));
         }
         catch (e) {
             loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}` });
         }
-        loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "Starting the query" });
-        yield db((schemaType === "localSchema") ? "users" : "goa").where("_id", `${id}`).select("*").then((response) => {
-            cb(null, response);
-        }).catch((error) => cb(error));
     }), findByUserName = (username) => __awaiter(this, void 0, void 0, function* () {
         try {
-            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findByUserName" });
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
             const data = yield db((schemaType === "localSchema") ? "users" : "goa").where("username", username).select("*");
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findByUserName", data: data[0], DAOName: "SqlDAO" });
             return (data.length > 0) ? data[0] : false;
         }
         catch (error) {
@@ -223,10 +240,9 @@ class SqlDAO {
         }
     }), createUser = (user) => __awaiter(this, void 0, void 0, function* () {
         try {
-            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "createUser" });
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
             const data = yield db.insert(user).into((schemaType === "localSchema") ? "users" : "goa").then(() => __awaiter(this, void 0, void 0, function* () { return yield db((schemaType === "localSchema") ? "users" : "goa").where("username", user.username).select("*"); })).catch(error => loggerHLP_1.loggerObject.error.error({ level: "error", message: (error.errno === 19) ? "UserName already exists" : `${error}` }));
-            console.log(yield data);
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "createUser", data, DAOName: "SqlDAO" });
             return (Array.isArray(data)) ? data[0] : data;
         }
         catch (error) {
@@ -234,9 +250,10 @@ class SqlDAO {
         }
     }), returnFields = () => __awaiter(this, void 0, void 0, function* () {
         try {
-            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "returnFields" });
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
-            return Object.keys(yield db((schemaType === "localSchema") ? "users" : "goa").columnInfo());
+            const data = Object.keys(yield db((schemaType === "localSchema") ? "users" : "goa").columnInfo());
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "returnFields", data, DAOName: "SqlDAO" });
+            return data;
         }
         catch (error) {
             loggerHLP_1.loggerObject.error.error({ level: "error", message: `${error}` });

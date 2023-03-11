@@ -13,10 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const selectorDAO_1 = __importDefault(require("./services/selectorDAO"));
+const loggerHLP_1 = require("./helper/loggerHLP");
 //const DAOSelectorObject=DAOs as unknown as DAOs.default
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const mongoose = require('mongoose');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { registerStrategy, loginStrategy } = require('./strategies/local');
 const oAuthModes = require('./strategies/oAuth2');
@@ -69,7 +69,7 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
     function buildLocalConfig() {
         registerStrategy(DAOlocal, userAlrreadyExistsMessage, createHash, crypt, hasVerificationFlag);
         passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
-            console.log("Serializing ", yield user["_id"]);
+            loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "serializeUser", data: yield user["_id"] });
             done(null, yield user._id);
         }));
         passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
@@ -82,9 +82,9 @@ function passportConfigBuilder(schemaObject, dbType = "MONGO") {
         console.log(oAuthModes);
         const { justLogin, loginAndRegister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage); //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
         passport.use(new GoogleStrategy(authObject, (loginOnly) ? justLogin : loginAndRegister));
-        passport.serializeUser((user, done) => {
-            done(null, user._id);
-        });
+        passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
+            done(null, yield user._id);
+        }));
         passport.deserializeUser((id, done) => {
             if (loginOnly) {
                 DAOlocal.findById(id, done);
