@@ -1,4 +1,4 @@
-import { Models } from "mongoose";
+import { Models, SchemaDefinition } from "mongoose";
 import { Knex } from "knex";
 // type AuthObjectType ={
 //     clientID:string,
@@ -69,6 +69,11 @@ export type ErrorMessage ={
 }
 export interface IDAOSelector {
 MONGO: IDAO
+}
+
+export interface ImongoDB {
+    db:string,
+    dbSchema:SchemaDefinition
 }
 // trabajar luego con los callbacks 
 // interface IDone {
