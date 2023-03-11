@@ -10,7 +10,8 @@
   "scripts": {
     "tsc": "tsc --init",
     "lint": "ts-standard",
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "try":"ts-node-dev pruebas.js"
   },
   "types": "types.d.ts",
   "dependencies": {
