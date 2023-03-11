@@ -75,6 +75,41 @@ export interface ImongoDB {
     db:string,
     dbSchema:SchemaDefinition
 }
+
+export interface IfindByIdError {
+    name:string,
+    message:string,
+    stringValue:string,
+    kind:string,
+    value:string,
+    path:string,
+    reason:any
+}
+interface MongooseValidationError {
+    message: string;
+    name: string;
+    kind: string;
+    path: string;
+    value: any;
+    properties?: {
+      message: string;
+      type: string;
+      path: string;
+      value: any;
+    };
+    reason?: any;
+  }
+ 
+  
+export interface MongooseCreateError extends Error {
+    name: string;
+    message: string;
+    errors?: { [key: string]: MongooseValidationError };
+    code?: number | string;
+    index?: number | string;
+    errmsg?: string;
+  }
+
 // trabajar luego con los callbacks 
 // interface IDone {
 //     done:(err?:Error,response?:any,flash:any)=>void

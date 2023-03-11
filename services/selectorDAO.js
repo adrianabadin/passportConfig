@@ -5,7 +5,8 @@ const MongoDAO = require('./mongoDAO');
 const SqlDAO = require('./sqlDAO');
 console.log(SqlDAO);
 class DAOSelector {
-    constructor(schemaObject, schemaType, MONGO = new MongoDAO(schemaObject, schemaType), SQL = new SqlDAO(schemaObject, schemaType)) {
+    constructor(schemaObject, schemaType, MONGO = MongoDAO, //(schemaObject,schemaType,),
+    SQL = new SqlDAO(schemaObject, schemaType)) {
         this.MONGO = MONGO;
         this.SQL = SQL;
     }

@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { IDAO, ISqlSchema, ISqlTypes, SqlDestructuring, ErrorMessage } from '../types';
+import { IDAO, ISqlSchema, ISqlTypes, IdbConnectionObject, ErrorMessage } from '../types';
 import {loggerObject} from "../helper/loggerHLP"
 
 /*
@@ -15,7 +15,7 @@ class SqlDAO implements IDAO {
     protected db:Knex
     protected dbSchema:ISqlSchema
     constructor(
-        {db,dbSchema}:SqlDestructuring,
+        {db,dbSchema}:IdbConnectionObject,
         
         protected schemaType: "localSchema"|"goaSchema",
         protected createUsersTable=async ():Promise<void> =>{
