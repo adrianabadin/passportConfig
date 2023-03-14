@@ -1,9 +1,8 @@
-import { Models,Schema as SchemaType} from "mongoose"
+import { Models,Schema } from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import {  IpassportConfigBuilderReturn, IlocalSchema } from './types';
-import DAOSelectorObject from './services/selectorDAO';
+import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject } from './types';
+import DAOSelector from './services/selectorDAO';
 import { loggerObject } from './helper/loggerHLP';
-//const DAOSelectorObject=DAOs as unknown as DAOs.default
 const passport =require( 'passport')
 const bcrypt=require( 'bcrypt')
 const GoogleStrategy=require( 'passport-google-oauth20').Strategy
@@ -12,12 +11,12 @@ const oAuthModes=require('./strategies/oAuth2')
 ////////////////
 //SCHEMAS
 
-function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "MONGO" ="MONGO"): IpassportConfigBuilderReturn {
+async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB |IdbConnectionObject,dbType:DbType ): Promise<IpassportConfigBuilderReturn> {
 //////////////////
 //variables
 /////////////////
-  const DAOlocal=new DAOSelectorObject[dbType](schemaObject,"localSchema") // DaoMongo(schemaObject,"localSchema")
-  const DAOgoa=new DAOSelectorObject[dbType](schemaObject,"goaSchema")//DaoMongo(schemaObject,"goaSchema")
+  const DAOlocal=await DAOSelector(schemaObject,"localSchema",dbType) // DaoMongo(schemaObject,"localSchema")
+  const DAOgoa=await DAOSelector(schemaObject,"goaSchema",dbType)//DaoMongo(schemaObject,"goaSchema")
   let userNotFoundMessage:string =""
   let incorrectPasswordMessage:string
   let userAlrreadyExistsMessage:string
@@ -84,12 +83,10 @@ function passportConfigBuilder (schemaObject:SchemaType<IlocalSchema>,dbType: "M
     passport.deserializeUser((id:string, done:any) => {
      if (loginOnly){DAOlocal.findById(id,done)}
      else {DAOgoa.findById(id,done)}
-      //googleAuthModel.findById(id, done)
     })
     return this
   }
   return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,hasVerification,setNotVerifiedMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }
 }
 
-
-module.exports = passportConfigBuilder
+export default passportConfigBuilder

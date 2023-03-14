@@ -1,0 +1,36 @@
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-14T05:53:09.294Z'
+}
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-14T05:53:09.307Z'
+}
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-14T05:54:17.542Z'
+}
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-14T05:54:17.563Z'
+}
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-14T05:54:59.835Z'
+}
+{
+  level: 'info',
+  message: 'Connected to MongoDB',
+  label: 'Logged by passport-fast-config',
+  timestamp: '2023-03-14T05:54:59.840Z'
+}

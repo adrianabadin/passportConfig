@@ -1,5 +1,5 @@
 import mongoose, {  Model, Schema} from "mongoose";
-import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage,  ImongoDB,IfindByIdError, MongooseCreateError } from '../types';
+import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage,  ImongoDB,IfindByIdError, MongooseCreateError, DbType, SchemaType } from '../types';
 import {loggerObject} from '../helper/loggerHLP'
 
 export class MongoDAO implements IDAO{
@@ -12,7 +12,7 @@ export class MongoDAO implements IDAO{
   public createInstance :()=>any
   constructor(
         protected db: Schema<IlocalSchema> | Schema<IgoogleUser> | ImongoDB,
-        protected schemaType: "goaSchema" |"localSchema",
+        protected schemaType: SchemaType,
         protected basicSchema= new Schema<IlocalSchema>({
             username: {
               type: String,

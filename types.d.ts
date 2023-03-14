@@ -111,6 +111,8 @@ export interface MongooseCreateError extends Error {
     index?: number | string;
     errmsg?: string;
   }
+export type DbType="MONGO"|"SQL"
+export type SchemaType="goaSchema" |"localSchema"
 
 // trabajar luego con los callbacks 
 // interface IDone {

@@ -11,7 +11,9 @@
     "tsc": "tsc --init",
     "lint": "ts-standard",
     "build": "tsc --build",
-    "try":"ts-node-dev pruebas.js"
+    "try":"ts-node-dev pruebas.js",
+    "buildSelector":"tsc  ./services/selectorDAO.ts"
+
   },
   "types": "types.d.ts",
   "dependencies": {
