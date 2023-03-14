@@ -17,8 +17,10 @@ This way, at this moment you can implement Local Strategy and google oAuth 2.0 b
 The package was builded using ECS modules.
 
 ```javascript
-import {passportConfigBuilder} from "passport-fast-config";
-o
+//ESM MODULES
+import passportConfig from "passport-fast-config";
+const passportConfigBuilder = passportConfig.default
+//COMMON JS 
 const passportConfigBuilder = require("passport-fast-config)
 ```
 
@@ -104,8 +106,13 @@ To call the implementation of our configuration you need to call the method **bu
 So the basic configuration for this implementation would be :
 
 **MONGO**
+only in common JS 
 ```javascript
 passportConfigBuilder(new Schema({}),"MONGO").buildLocalConfig();
+```
+ESM modules 
+```javascript
+const pass=(await passportConfigBuilder({db:"mongo url",dbSchema:{Schema Definition}},"MONGO")).buildLocalConfig();
 ```
 
 **KNEX JS**
@@ -247,5 +254,5 @@ I hope you find this package usefull, i belive that it adds value to the impleme
 3. Typescript type definitions added to the package
 4. Typescript native module added to the package
 5. Custom message seters implemented
-
+6. Fixed mongoose connection error on ESM modules
 Thanks for your time.
