@@ -73,10 +73,17 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
     return this
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
-   console.log(oAuthModes)
-    const {justLogin,loginAndRegister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
+    let needBirthDay:boolean = false
+    let needPhone:boolean = false
+    const ask4BirthDay = ():void=>{
+      needBirthDay=true
+    }
+    const askPhone =():void=>{
+      needPhone=true
+    }
+    const {justLogin,loginAndregister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
     passport.use(new GoogleStrategy(authObject,
-      (loginOnly) ? justLogin : loginAndRegister))
+      (loginOnly) ? justLogin : loginAndregister))
     passport.serializeUser(async (user:Models, done:any) => {
       done(null,await user._id)
     })
