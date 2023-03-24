@@ -81,9 +81,9 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
     const askPhone =():void=>{
       needPhone=true
     }
-    const {justLogin,loginAndregister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
-    passport.use(new GoogleStrategy(authObject,
-      (loginOnly) ? justLogin : loginAndregister))
+    const {justLogin,loginAndRegister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
+    passport.use(new GoogleStrategy({...authObject,passReqToCallback: true,scope:["profile","email"] },
+      (loginOnly) ? justLogin : loginAndRegister))
     passport.serializeUser(async (user:Models, done:any) => {
       done(null,await user._id)
     })

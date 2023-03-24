@@ -8,8 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const loggerHLP_1 = require("../helper/loggerHLP");
+const axios_1 = __importDefault(require("axios"));
 function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
     const justLogin = (_accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -27,7 +31,14 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
         }
     });
     //VERIFICAR LAS FUNCIONES DE LOGINREGISTER Y LUEGO VOLVER A VER APP.TS
-    const loginAndregister = (_accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
+    const loginAndRegister = (req, accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
+        const basicObject = {
+            username: email.emails[0].value,
+            gUserId: email.id,
+            name: email.name.givenName,
+            lastname: email.name.familyName,
+            avatar: email.photos[0].value
+        };
         try {
             const resultado = yield DAOgoa.findByUserName(email.emails[0].value);
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", method: "Login and Register GoogleoAuth", data: resultado });
@@ -35,7 +46,21 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
                 return cb(null, resultado);
             }
             try {
-                const usercreated = yield DAOgoa.createUser({ username: email.emails[0].value, password: email.id, name: email.name.givenName, lastname: email.name.familyName, avatar: email.photos[0].value });
+                const fields = yield DAOgoa.returnFields();
+                let newUser;
+                if (Array.isArray(fields))
+                    fields.forEach(field => {
+                        if (field in basicObject) {
+                            newUser = Object.assign(Object.assign({}, newUser), { [field]: basicObject[field] });
+                        }
+                        else if (req.body !== null) {
+                            newUser = Object.assign(Object.assign({}, newUser), { [field]: req.body[field] });
+                        }
+                    });
+                const peopleObject = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${resultado.id}?personFields=birthdays,genders&access_token=${accessToken}`);
+                console.log(peopleObject);
+                // aca va la logica que le pide al usuario los datoos a traves de la api people de google
+                const usercreated = yield DAOgoa.createUser(newUser);
                 return cb(null, usercreated);
             }
             catch (err) {
@@ -48,6 +73,6 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
             return cb(err, null, { message: "Error login with oAuth" });
         }
     });
-    return { justLogin, loginAndregister };
+    return { justLogin, loginAndRegister };
 }
 module.exports = oAuthModes;

@@ -89,13 +89,12 @@ class MongoDAO {
         let dbConnectionObject;
         if (isSchema(db)) {
             dataSchema = db;
-            this.model = isLocal ? mongoose_1.default.model('localCollection', dataSchema.add(basicSchema)) : mongoose_1.default.model('goaCollection', gooogleOauthSchema);
+            this.model = isLocal ? mongoose_1.default.model('localCollection', dataSchema.add(basicSchema)) : mongoose_1.default.model('goaCollection', dataSchema.add(gooogleOauthSchema));
         }
         else if (!isDbConnectionSchema(db)) {
             dbConnectionObject = db;
             let schema = new mongoose_1.Schema(dbConnectionObject.dbSchema);
-            schema.add(basicSchema);
-            this.model = isLocal ? mongoose_1.default.model('localCollection', schema) : mongoose_1.default.model("goaCollection", gooogleOauthSchema);
+            this.model = isLocal ? mongoose_1.default.model('localCollection', schema.add(basicSchema)) : mongoose_1.default.model("goaCollection", schema.add(gooogleOauthSchema));
         }
         this.findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
             try {
@@ -205,38 +204,3 @@ class MongoDAO {
     }
 }
 exports.MongoDAO = MongoDAO;
-//Funciones que deben ser iguales
-//  public model:Model<any>  = isLocal ? mongoose.model('localCollection',db.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema),
-//public findById=async (id:string,cb:any):Promise<any> =>{
-//   loggerObject.debug.debug({level:"debug",message:"findById"})
-//   try{
-//   this.model.findById(id,cb)
-// }catch(e){loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})}
-// },
-// public findByUserName=async (username:string):Promise<any> =>{
-//   loggerObject.debug.debug({level:"debug",message:"findByUserName"})
-//   try {
-//     return await this.model.findOne({username})
-// }catch(e)
-// {
-//   loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})
-// } 
-// },
-// public createUser=async (user:any):Promise<any>=>{
-//   loggerObject.debug.debug({level:"debug",message:"createUser"})
-//   try {
-//     return await this.model.create(user)
-//   }
-//   catch(e){
-//     loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})
-//   } 
-// },
-// public returnFields= ():string[]|ErrorMessage=> {
-//   loggerObject.debug.debug({level:"debug",message:"returnFields"})
-//   try {
-//     return Object.keys(this.model.schema.obj)
-//   } 
-//   catch(e){loggerObject.error.error({level: "error",message:`${e}`})
-//   return {message:"Something went wrong while retriving schema fields",error:`${e}`}
-// }
-// }

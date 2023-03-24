@@ -72,12 +72,12 @@ export class MongoDAO implements IDAO{
             if (isSchema(db)) 
             {
               dataSchema = db as Schema<IlocalSchema|IgoogleUser> 
-              this.model=isLocal ? mongoose.model('localCollection',dataSchema.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema)
+              this.model=isLocal ? mongoose.model('localCollection',dataSchema.add(basicSchema)) :mongoose.model('goaCollection',dataSchema.add(gooogleOauthSchema))
             } else if (!isDbConnectionSchema(db)){
               dbConnectionObject=db as ImongoDB
               let schema = new Schema(dbConnectionObject.dbSchema)
-              schema.add(basicSchema)
-              this.model=isLocal ? mongoose.model('localCollection',schema):mongoose.model("goaCollection",gooogleOauthSchema)
+              
+              this.model=isLocal ? mongoose.model('localCollection',schema.add(basicSchema)):mongoose.model("goaCollection",schema.add(gooogleOauthSchema))
             }
             this.findById=async (id:string,cb:any):Promise<any> =>{
                 
@@ -184,41 +184,3 @@ export class MongoDAO implements IDAO{
 
 
 
-
-          //Funciones que deben ser iguales
-        
-        //  public model:Model<any>  = isLocal ? mongoose.model('localCollection',db.add(basicSchema)) :mongoose.model('goaCollection',gooogleOauthSchema),
-          //public findById=async (id:string,cb:any):Promise<any> =>{
-          //   loggerObject.debug.debug({level:"debug",message:"findById"})
-          //   try{
-          //   this.model.findById(id,cb)
-          // }catch(e){loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})}
-          // },
-          // public findByUserName=async (username:string):Promise<any> =>{
-          //   loggerObject.debug.debug({level:"debug",message:"findByUserName"})
- 
-          //   try {
-          //     return await this.model.findOne({username})
-          // }catch(e)
-          // {
-          //   loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})
-          // } 
-          // },
-          // public createUser=async (user:any):Promise<any>=>{
-          //   loggerObject.debug.debug({level:"debug",message:"createUser"})
-          //   try {
-          //     return await this.model.create(user)
-          //   }
-          //   catch(e){
-          //     loggerObject.error.error({level:"error",title:"Error accesing database",message:`${e}`})
-          //   } 
-          // },
-          // public returnFields= ():string[]|ErrorMessage=> {
-          //   loggerObject.debug.debug({level:"debug",message:"returnFields"})
-          //   try {
-          //     return Object.keys(this.model.schema.obj)
-          //   } 
-          //   catch(e){loggerObject.error.error({level: "error",message:`${e}`})
-          //   return {message:"Something went wrong while retriving schema fields",error:`${e}`}
-          // }
-          // }
