@@ -1,6 +1,6 @@
 import { Models,Schema } from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject } from './types';
+import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject, IGoAuthOptions, authorizationTypes } from './types';
 import DAOSelector from './services/selectorDAO';
 import { loggerObject } from './helper/loggerHLP';
 const passport =require( 'passport')
@@ -72,7 +72,8 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
     loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid,notVerifiedMessage)
     return this
   }
-  function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
+  function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false,options:IGoAuthOptions):IpassportConfigBuilderReturn {
+   
     let needBirthDay:boolean = false
     let needPhone:boolean = false
     const ask4BirthDay = ():void=>{
@@ -81,8 +82,16 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
     const askPhone =():void=>{
       needPhone=true
     }
+    let authorizationStrings:string[] =["profile","email"]
+    if ("autorizations" in options){
+      if (Array.isArray(options["autorizations"])){
+        options.authorizations.forEach((authorization:authorizationTypes)=>{
+          authorizationStrings.push(authorizationObject[authorization])
+        })
+      }
+  }
     const {justLogin,loginAndregister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
-    passport.use(new GoogleStrategy(authObject,
+    passport.use(new GoogleStrategy({...authObject,passReqToCallback:true ,scope:authorizationStrings},
       (loginOnly) ? justLogin : loginAndregister))
     passport.serializeUser(async (user:Models, done:any) => {
       done(null,await user._id)

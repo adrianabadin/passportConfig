@@ -8,7 +8,7 @@ import { Knex } from "knex";
 interface IpassportConfigBuilderReturn {
     buildLocalConfig:()=>IpassportConfigBuilderReturn, 
     setCrypt:(value:boolean)=>IpassportConfigBuilderReturn,
-    GoogleoAuth: (authObject:AuthenticateOptionsGoogle,loginOnly:boolean)=>IpassportConfigBuilderReturn,
+    GoogleoAuth: (authObject:AuthenticateOptionsGoogle,loginOnly?:boolean,options?:IGoAuthOptions)=>IpassportConfigBuilderReturn,
     setUserNotFoundMessage:(userNotFoundMessageParam:string)=>IpassportConfigBuilderReturn,
     setIncorrectPassword:(incorrectPasswordParam:string)=>IpassportConfigBuilderReturn,
     setUserAlrreadyExistsMessage:(userExistsParam:string)=>IpassportConfigBuilderReturn,
@@ -113,7 +113,23 @@ export interface MongooseCreateError extends Error {
   }
 export type DbType="MONGO"|"SQL"
 export type SchemaType="goaSchema" |"localSchema"
-
+export type authorizationTypes= "birthdays" | "phoneNumbers"| "addresses"|"genders"|"organizations"
+export interface IGoAuthOptions {
+    loginOnly?:boolean
+    authorizations?:string[authorizationTypes]
+}
+export interface IAuthorizationScopes {
+    "https://www.googleapis.com/auth/user.birthday.read"?:"birthdays",
+    "https://www.googleapis.com/auth/user.phonenumbers.read"?:"phoneNumbers",
+    "https://www.googleapis.com/auth/user.addresses.read"?:"addresses",
+    "https://www.googleapis.com/auth/user.gender.read"?:"genders",
+    "https://www.googleapis.com/auth/user.organization.read"?:"organizations"
+}
+export interface IRequest extends Express.Request {
+    authInfo?:{
+        scopes?:string
+    }
+}
 // trabajar luego con los callbacks 
 // interface IDone {
 //     done:(err?:Error,response?:any,flash:any)=>void
