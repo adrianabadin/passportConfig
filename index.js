@@ -79,9 +79,17 @@ function passportConfigBuilder(schemaObject, dbType) {
             return this;
         }
         function GoogleoAuth(authObject, loginOnly = false) {
-            console.log(oAuthModes);
-            const { justLogin, loginAndRegister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage); //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
-            passport.use(new GoogleStrategy(authObject, (loginOnly) ? justLogin : loginAndRegister));
+            const { justLogin, loginAndregister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage);
+            passport.use(new GoogleStrategy(Object.assign(Object.assign({}, authObject), { passReqToCallback: true, scope: [
+                    "openid",
+                    "profile",
+                    "email",
+                    "https://www.googleapis.com/auth/user.birthday.read",
+                    "https://www.googleapis.com/auth/user.phonenumbers.read",
+                    "https://www.googleapis.com/auth/user.addresses.read",
+                    "https://www.googleapis.com/auth/user.gender.read",
+                    "https://www.googleapis.com/auth/user.organization.read"
+                ] }), (loginOnly) ? justLogin : loginAndregister));
             passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
                 done(null, yield user._id);
             }));

@@ -31,14 +31,32 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
         }
     });
     //VERIFICAR LAS FUNCIONES DE LOGINREGISTER Y LUEGO VOLVER A VER APP.TS
-    const loginAndRegister = (req, accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
-        const basicObject = {
-            username: email.emails[0].value,
-            gUserId: email.id,
-            name: email.name.givenName,
-            lastname: email.name.familyName,
-            avatar: email.photos[0].value
+    const loginAndregister = (req, accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
+        const authorizationObject = {
+            "https://www.googleapis.com/auth/user.birthday.read": "birthdays",
+            "https://www.googleapis.com/auth/user.phonenumbers.read	": "phoneNumbers",
+            "https://www.googleapis.com/auth/user.addresses.read": "addresses",
+            "https://www.googleapis.com/auth/user.gender.read": "genders",
+            "https://www.googleapis.com/auth/user.organization.read": "organizations",
+            "openid": "",
+            "https://www.googleapis.com/auth/userinfo.profile": "",
+            "https://www.googleapis.com/auth/userinfo.email": ""
         };
+        let urlFields = "";
+        const tokenInfo = yield axios_1.default.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
+        if ("data" in tokenInfo)
+            if ("scope" in tokenInfo.data) {
+                console.log("scopes exists");
+                tokenInfo.data.scope.split(" ").forEach((scope) => {
+                    if (authorizationObject[scope] !== "")
+                        urlFields += authorizationObject[scope] + ",";
+                });
+                urlFields = urlFields.substring(0, urlFields.length);
+            }
+        console.log(urlFields);
+        const extendedData = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${email.id}?personFields=${urlFields}&access_token=${accessToken}`);
+        console.log(extendedData.data, Object.keys(extendedData.data));
+
         try {
             const resultado = yield DAOgoa.findByUserName(email.emails[0].value);
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", method: "Login and Register GoogleoAuth", data: resultado });

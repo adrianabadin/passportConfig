@@ -1,6 +1,6 @@
 import { Models,Schema } from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject } from './types';
+import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject,  authorizationTypes } from './types';
 import DAOSelector from './services/selectorDAO';
 import { loggerObject } from './helper/loggerHLP';
 const passport =require( 'passport')
@@ -73,17 +73,22 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
     return this
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
-    let needBirthDay:boolean = false
-    let needPhone:boolean = false
-    const ask4BirthDay = ():void=>{
-      needBirthDay=true
-    }
-    const askPhone =():void=>{
-      needPhone=true
-    }
-    const {justLogin,loginAndRegister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) //oAuthModes(DAOgoa.model,DAOlocal.model,userNotFoundMessage)
-    passport.use(new GoogleStrategy({...authObject,passReqToCallback: true,scope:["profile","email"] },
-      (loginOnly) ? justLogin : loginAndRegister))
+  
+    const {justLogin,loginAndregister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) 
+    passport.use(new GoogleStrategy({...authObject,
+      passReqToCallback:true,
+      scope:[
+      "openid",
+      "profile",
+      "email",
+      "https://www.googleapis.com/auth/user.birthday.read",
+      "https://www.googleapis.com/auth/user.phonenumbers.read",
+      "https://www.googleapis.com/auth/user.addresses.read",
+      "https://www.googleapis.com/auth/user.gender.read",
+      "https://www.googleapis.com/auth/user.organization.read"
+    ]},
+      (loginOnly) ? justLogin : loginAndregister))
+
     passport.serializeUser(async (user:Models, done:any) => {
       done(null,await user._id)
     })
