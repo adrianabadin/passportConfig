@@ -8,8 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const loggerHLP_1 = require("../helper/loggerHLP");
+const axios_1 = __importDefault(require("axios"));
 function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
     const justLogin = (_accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -27,7 +31,41 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
         }
     });
     //VERIFICAR LAS FUNCIONES DE LOGINREGISTER Y LUEGO VOLVER A VER APP.TS
-    const loginAndregister = (_accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
+    const loginAndregister = (req, accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
+        const authorizationObject = {
+            "https://www.googleapis.com/auth/user.birthday.read": "birthdays",
+            "https://www.googleapis.com/auth/user.phonenumbers.read": "phoneNumbers",
+            "https://www.googleapis.com/auth/user.addresses.read": "addresses",
+            "https://www.googleapis.com/auth/user.gender.read": "genders",
+            "https://www.googleapis.com/auth/user.organization.read": "organizations",
+            openid:"",
+            "https://www.googleapis.com/auth/userinfo.profile":"",
+            "https://www.googleapis.com/auth/userinfo.email":""
+        };
+        let urlFields = ""
+        const tokenInfo = yield axios_1.default.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
+        if ("data" in tokenInfo)
+            if ("scope" in tokenInfo.data) {
+                console.log("scopes exists",tokenInfo.data.scope);
+                tokenInfo.data.scope.split(" ").forEach((scope) => {
+                    if(authorizationObject[scope]!=="") urlFields += authorizationObject[scope] + ","
+                });
+                urlFields=urlFields.substring(0, urlFields.length-1)
+                urlFields += "&access_token=" + accessToken;
+            }
+        // if (req.authInfo !== undefined) {
+        //   console.log("authInfoExists",req.authInfo)
+        //   if ("scopes" in req.authInfo){
+        //     req.authInfo.scopes?.split(",").forEach((scope:string)=>{
+        //       urlFields += authorizationObject[scope as keyof IAuthorizationScopes]+","
+        //     })
+        //     console.log("scopes exists",req.authInfo.scopes)
+        //   urlFields +="&access_token="+accessToken
+        //   }
+        // }
+        console.log(urlFields);
+        const extendedData = await axios.get(`https://people.googleapis.com/v1/people/${email.id}?personFields=${urlFields}&access_token=${accessToken}`,{Authorization: `Bearer ${accessToken}`)
+        console.log(extendedData.data,Object.keys(extendedData.data))
         try {
             const resultado = yield DAOgoa.findByUserName(email.emails[0].value);
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", method: "Login and Register GoogleoAuth", data: resultado });

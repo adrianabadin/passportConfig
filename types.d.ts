@@ -8,7 +8,7 @@ import { Knex } from "knex";
 interface IpassportConfigBuilderReturn {
     buildLocalConfig:()=>IpassportConfigBuilderReturn, 
     setCrypt:(value:boolean)=>IpassportConfigBuilderReturn,
-    GoogleoAuth: (authObject:AuthenticateOptionsGoogle,loginOnly?:boolean,options?:IGoAuthOptions)=>IpassportConfigBuilderReturn,
+    GoogleoAuth: (authObject:AuthenticateOptionsGoogle,loginOnly?:boolean)=>IpassportConfigBuilderReturn,
     setUserNotFoundMessage:(userNotFoundMessageParam:string)=>IpassportConfigBuilderReturn,
     setIncorrectPassword:(incorrectPasswordParam:string)=>IpassportConfigBuilderReturn,
     setUserAlrreadyExistsMessage:(userExistsParam:string)=>IpassportConfigBuilderReturn,

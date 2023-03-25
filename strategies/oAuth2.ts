@@ -29,16 +29,28 @@ function oAuthModes(DAOgoa:IDAO,
       "https://www.googleapis.com/auth/user.organization.read":"organizations"
     }
     let urlFields:string ="https://www.googleapis.com/v1/people/"+email.id+"?personFields="
-    if (req.authInfo !== undefined) {
-      if ("scopes" in req.authInfo){
-        req.authInfo.scopes?.split(",").forEach((scope:string)=>{
+    const tokenInfo =await axios.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`)
+    if("data"in tokenInfo) 
+      if ("scope" in tokenInfo.data) {
+        console.log("scopes exists")
+        tokenInfo.data.scope.split(" ").forEach((scope:string)=>{
           urlFields += authorizationObject[scope as keyof IAuthorizationScopes]+","
         })
-      urlFields +="&access_token="+accessToken
+        urlFields +="&access_token="+accessToken
       }
-    }
-    const extendedData = await axios.get(urlFields)
-    console.log(extendedData.data,Object.keys(extendedData.data))
+    // if (req.authInfo !== undefined) {
+    //   console.log("authInfoExists",req.authInfo)
+    //   if ("scopes" in req.authInfo){
+    //     req.authInfo.scopes?.split(",").forEach((scope:string)=>{
+    //       urlFields += authorizationObject[scope as keyof IAuthorizationScopes]+","
+    //     })
+    //     console.log("scopes exists",req.authInfo.scopes)
+    //   urlFields +="&access_token="+accessToken
+    //   }
+    // }
+    console.log(urlFields)
+    // const extendedData = await axios.get(urlFields)
+    // console.log(extendedData.data,Object.keys(extendedData.data))
     try {
       const resultado = await DAOgoa.findByUserName(email.emails[0].value )
       loggerObject.debug.debug({level:"debug",method:"Login and Register GoogleoAuth",data:resultado})
