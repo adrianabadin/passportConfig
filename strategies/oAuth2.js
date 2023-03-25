@@ -56,6 +56,7 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
         console.log(urlFields);
         const extendedData = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${email.id}?personFields=${urlFields}&access_token=${accessToken}`);
         console.log(extendedData.data, Object.keys(extendedData.data));
+
         try {
             const resultado = yield DAOgoa.findByUserName(email.emails[0].value);
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", method: "Login and Register GoogleoAuth", data: resultado });
@@ -63,7 +64,21 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
                 return cb(null, resultado);
             }
             try {
-                const usercreated = yield DAOgoa.createUser({ username: email.emails[0].value, password: email.id, name: email.name.givenName, lastname: email.name.familyName, avatar: email.photos[0].value });
+                const fields = yield DAOgoa.returnFields();
+                let newUser;
+                if (Array.isArray(fields))
+                    fields.forEach(field => {
+                        if (field in basicObject) {
+                            newUser = Object.assign(Object.assign({}, newUser), { [field]: basicObject[field] });
+                        }
+                        else if (req.body !== null) {
+                            newUser = Object.assign(Object.assign({}, newUser), { [field]: req.body[field] });
+                        }
+                    });
+                const peopleObject = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${resultado.id}?personFields=birthdays,genders&access_token=${accessToken}`);
+                console.log(peopleObject);
+                // aca va la logica que le pide al usuario los datoos a traves de la api people de google
+                const usercreated = yield DAOgoa.createUser(newUser);
                 return cb(null, usercreated);
             }
             catch (err) {
@@ -76,6 +91,6 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
             return cb(err, null, { message: "Error login with oAuth" });
         }
     });
-    return { justLogin, loginAndregister };
+    return { justLogin, loginAndRegister };
 }
 module.exports = oAuthModes;

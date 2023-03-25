@@ -77,7 +77,13 @@ export interface ImongoDB {
     db:string,
     dbSchema:SchemaDefinition
 }
-
+export interface IgoaBasicObject {
+    username:string
+    gUserId: string
+    name: string
+    lastname: string
+    avatar: string
+}
 export interface IfindByIdError {
     name:string,
     message:string,
