@@ -55,7 +55,14 @@ class MongoDAO {
         },
         name: String,
         lastName: String,
-        avatar: String
+        avatar: String,
+        age: Number,
+        birthdays: Date,
+        genders: String,
+        organizations: [],
+        adress: String,
+        at: String,
+        rt: String
     }), isLocal = (schemaType === 'localSchema'), isSchema = (data) => {
         if (data instanceof mongoose_1.Schema)
             return true;
@@ -172,11 +179,24 @@ class MongoDAO {
         this.isDbConnectionSchema = isDbConnectionSchema;
         this.ClassBuilder = ClassBuilder;
         this.createInstance = () => __awaiter(this, void 0, void 0, function* () {
-            if (MongoDAO.Instance === undefined) {
-                MongoDAO.Instance = new MongoDAO(db, schemaType);
-                yield MongoDAO.Instance.ClassBuilder();
+            if (schemaType === "localSchema") {
+                if (MongoDAO.localInstance === undefined) {
+                    MongoDAO.localInstance = new MongoDAO(db, schemaType);
+                    yield MongoDAO.localInstance.ClassBuilder();
+                }
+                loggerHLP_1.loggerObject.debug.debug({ level: "debug", model: MongoDAO.localInstance.model, schemaType });
+                return MongoDAO.localInstance;
             }
-            return MongoDAO.Instance;
+            else {
+                if (schemaType === "goaSchema") {
+                    if (MongoDAO.goaInstance === undefined) {
+                        MongoDAO.goaInstance = new MongoDAO(db, schemaType);
+                        yield MongoDAO.goaInstance.ClassBuilder();
+                    }
+                    loggerHLP_1.loggerObject.debug.debug({ level: "debug", model: MongoDAO.goaInstance.model, schemaType });
+                    return MongoDAO.goaInstance;
+                }
+            }
         });
         const data = this.db;
         if (this.isSchema(db)) {
@@ -191,7 +211,16 @@ class MongoDAO {
                 mongoose_1.default.set("strictQuery", false);
                 mongoose_1.default.connect(data.db)
                     .then(() => {
-                    loggerHLP_1.loggerObject.info.info({ level: "info", message: "Connected to MongoDB" });
+                    if (schemaType === "goaSchema") {
+                        if (MongoDAO.goaInstance !== undefined) {
+                            return MongoDAO.goaInstance;
+                        }
+                    }
+                    else if (schemaType === "localSchema") {
+                        if (MongoDAO.localInstance !== undefined)
+                            return MongoDAO.localInstance;
+                    }
+                    loggerHLP_1.loggerObject.info.info({ level: "info", message: "Connecting to MongoDB" });
                     this.createInstance();
                 })
                     .catch(error => {

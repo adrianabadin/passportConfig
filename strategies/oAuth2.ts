@@ -48,7 +48,12 @@ function oAuthModes(DAOgoa:IDAO,
 return {justLogin,loginAndRegister}
 }
 async function createNewUser(extendedData:AxiosResponse,profile:profileType){
-  let userData:Partial<basicUserType & PeopleDataType<PeopleFieldsType>>
+  let userData:Partial<basicUserType & PeopleDataType<PeopleFieldsType>>= {
+    username:profile._json.email,
+    name:profile._json.given_name,
+    lastname:profile._json.family_name,
+    avatar:profile._json.picture}
+
   if (extendedData.status=200){
   const switchObject={
   genders:(field:PeopleDataType<"genders">)=> {
@@ -66,12 +71,6 @@ async function createNewUser(extendedData:AxiosResponse,profile:profileType){
   },
   organizations:(field:PeopleDataType<"organizations">)=>field
 }
-  userData={
-    username:profile._json.email,
-    nombre:profile._json.given_name,
-    apellido:profile._json.family_name,
-    avatar:profile._json.picture}
-
 Object.keys(extendedData.data).forEach((field:any)=>
 {
   const fieldData :PeopleFieldsType = field as  "genders"|"birthdays"|"organizations";
@@ -79,19 +78,12 @@ Object.keys(extendedData.data).forEach((field:any)=>
   {
     const getData =switchObject[fieldData](extendedData.data[field])
     if (getData!==undefined) {userData={...userData,[fieldData]:getData}
-     if(fieldData==="birthdays") userData={...userData,edad:calcularEdad(getData as Date)} }
+     if(fieldData==="birthdays") userData={...userData,age:calcularEdad(getData as Date)} }
   }
 })
 
 }
-else 
-{
-  userData ={
-    username:profile._json.email,
-    nombre:profile._json.given_name,
-    apellido:profile._json.family_name,
-    avatar:profile._json.picture}
-}
+
 return userData  
 }
 function calcularEdad(fechaNacimiento:Date):number {
