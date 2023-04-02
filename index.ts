@@ -10,7 +10,6 @@ const {registerStrategy,loginStrategy} = require('./strategies/local')
 const oAuthModes=require('./strategies/oAuth2')
 ////////////////
 //SCHEMAS
-//SCOPES DE GOOGLEOAUTH 
 
 async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB |IdbConnectionObject,dbType:DbType ): Promise<IpassportConfigBuilderReturn> {
 //////////////////
@@ -75,8 +74,21 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
   }
   function GoogleoAuth (this:IpassportConfigBuilderReturn, authObject:AuthenticateOptionsGoogle, loginOnly = false):IpassportConfigBuilderReturn {
   
-    const {justLogin,loginAndRegister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) 
-    passport.use(new GoogleStrategy(authObject,(loginOnly) ? justLogin : loginAndRegister))
+    const {justLogin,loginAndregister}=oAuthModes(DAOgoa,DAOlocal,userNotFoundMessage) 
+    passport.use(new GoogleStrategy({...authObject,
+      passReqToCallback:true,
+      scope:[
+      "openid",
+      "profile",
+      "email",
+      "https://www.googleapis.com/auth/user.birthday.read",
+      "https://www.googleapis.com/auth/user.phonenumbers.read",
+      "https://www.googleapis.com/auth/user.addresses.read",
+      "https://www.googleapis.com/auth/user.gender.read",
+      "https://www.googleapis.com/auth/user.organization.read"
+    ]},
+      (loginOnly) ? justLogin : loginAndregister))
+
     passport.serializeUser(async (user:Models, done:any) => {
       done(null,await user._id)
     })
