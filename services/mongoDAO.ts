@@ -1,6 +1,7 @@
 import mongoose, {  Model, Schema} from "mongoose";
-import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage,  ImongoDB,IfindByIdError, MongooseCreateError, DbType, SchemaType } from '../types';
+import { IgoogleUser, IlocalSchema, IDAO, ErrorMessage, ImongoDB, IfindByIdError, MongooseCreateError, DbType, SchemaType } from '../types';
 import {loggerObject} from '../helper/loggerHLP'
+import { SchemaDefinition } from 'mongoose';
 
 export class MongoDAO implements IDAO{
   public model!:Model<any>  
@@ -8,7 +9,8 @@ export class MongoDAO implements IDAO{
   public findByUserName!: (username:string)=>Promise<any>
   public createUser!:(user:any)=>Promise<any>
   public returnFields!: ()=>string[]|ErrorMessage
-  static Instance: any
+  static localInstance: any
+  static goaInstance:any
   public createInstance :()=>any
   constructor(
         protected db: Schema<IlocalSchema> | Schema<IgoogleUser> | ImongoDB,
@@ -33,7 +35,14 @@ export class MongoDAO implements IDAO{
             },
             name: String,
             lastName: String,
-            avatar: String
+            avatar: String,
+            age:Number,
+            birthdays:Date,
+            genders:String,
+            organizations:[],
+            adress:String,
+            at:String,
+            rt:String
           }),
           protected isLocal = (schemaType==='localSchema'),
           protected isSchema =(data:Schema<IlocalSchema> | Schema<IgoogleUser>|ImongoDB):boolean=>{
@@ -146,11 +155,26 @@ export class MongoDAO implements IDAO{
           
           ){        
               this.createInstance=async ():Promise<any>=>{
-                if(MongoDAO.Instance === undefined){
-                MongoDAO.Instance = new MongoDAO(db,schemaType)
-                await MongoDAO.Instance.ClassBuilder()}
-                return MongoDAO.Instance
-            }          
+                if(schemaType==="localSchema"){
+                  if (MongoDAO.localInstance ===undefined){
+                  MongoDAO.localInstance = new MongoDAO(db,schemaType)
+                  await MongoDAO.localInstance.ClassBuilder()
+                  }
+                loggerObject.debug.debug({level:"debug",model:MongoDAO.localInstance.model,schemaType})  
+                return MongoDAO.localInstance
+                }else 
+                {
+                  if (schemaType ==="goaSchema"){
+                    if (MongoDAO.goaInstance===undefined)
+                    {
+                      MongoDAO.goaInstance = new MongoDAO(db,schemaType)
+                      await MongoDAO.goaInstance.ClassBuilder()
+                    }
+                  loggerObject.debug.debug({level:"debug",model:MongoDAO.goaInstance.model,schemaType})  
+                  return MongoDAO.goaInstance
+                }
+              }             
+              }
             const data:ImongoDB =this.db as ImongoDB;
   
             if (this.isSchema(db as ImongoDB)){
@@ -165,7 +189,14 @@ export class MongoDAO implements IDAO{
                 mongoose.set("strictQuery",false)
                 mongoose.connect(data.db)
                   .then(()=>{
-                    loggerObject.info.info({level:"info",message:"Connected to MongoDB"})
+                    if (schemaType==="goaSchema"){
+                      if (MongoDAO.goaInstance !==undefined)
+                      {
+                        return MongoDAO.goaInstance}
+                    }else if(schemaType==="localSchema"){
+                      if (MongoDAO.localInstance !==undefined) return MongoDAO.localInstance
+                    }
+                    loggerObject.info.info({level:"info",message:"Connecting to MongoDB"})
                     this.createInstance()
           
                   })

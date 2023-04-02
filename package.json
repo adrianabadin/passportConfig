@@ -1,18 +1,16 @@
 {
   "name": "passport-fast-config",
-  "version": "1.0.9b",
-  "description": "",
+  "version": "1.1.0b",
+  "description": "This package adds a easy configuration to Passport Js implementation",
   "main": "./",
   "type": "commonjs",
-  "keywords": [],
+  "keywords": ["passport","passportjs","login","users"],
   "author": "",
   "license": "ISC",
   "scripts": {
     "tsc": "tsc --init",
-    "lint": "ts-standard",
-    "build": "tsc --build",
-    "try": "ts-node-dev pruebas.js",
-    "buildSelector": "tsc  ./services/selectorDAO.ts"
+    "build": "tsc --build"
+
   },
   "types": "types.d.ts",
   "dependencies": {
