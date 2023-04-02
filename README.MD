@@ -247,51 +247,6 @@ passportConfigBuilder(new Schema({}),"MONGO")
 
 I hope you find this package usefull, i belive that it adds value to the implementation of most case scenarios of the passport JS framework.
 
-## Google o Auth Scopes
-The library has implemented a request of extended data from people API to be added to the register capacity of the google oauth Implementation. 
-To use this feature you need to verify your app in the google developer console, because any other way you will not get the data from google servers.
-In Development mode you can use the test users to be able to see the functionality, but remember that this is a feature that need google aprobal to work on production. 
-To make use of this functionality you just need to add scopes to your route request.
-It will show the user the autorization page to the data you are requesting and in the case of authorization it will automatically generate a new registred user adding the expanded scope to your database.
-Phone Numbers and adresses may not be automatically added because the api only provides that information of the users that have been registred that information on ther profiles. 
-Phone Numbers that are registred only on the account recovery data will not be automatically added and you may need to implement a manual form to do so.
-
-### Scopes and permissions added to the package
-
-```javascript
-scope:[   
-    "openid",
-    "profile",
-    "email",
-    "https://www.googleapis.com/auth/user.addresses.read",
-    "https://www.googleapis.com/auth/user.birthday.read",
-    "https://www.googleapis.com/auth/user.emails.read",
-    "https://www.googleapis.com/auth/user.gender.read",
-    "https://www.googleapis.com/auth/user.organization.read",
-    "https://www.googleapis.com/auth/user.phonenumbers.read",
-]
-```
-#### Example Request
-```javascript
-
-router.get("/goa",passport.authenticate("google",{scope:[
-    "openid",
-    "profile",
-    "email",
-    "https://www.googleapis.com/auth/contacts",
-    "https://www.googleapis.com/auth/directory.readonly",
-    "https://www.googleapis.com/auth/contacts.readonly",
-    "https://www.googleapis.com/auth/user.birthday.read",
-    "https://www.googleapis.com/auth/user.phonenumbers.read",
-    "https://www.googleapis.com/auth/user.gender.read",
-    "https://www.googleapis.com/auth/user.addresses.read",
-    "https://www.googleapis.com/auth/user.organization.read",
-
-]}))
-```
-
-
-
 ## Version Updates
 
 1. Base app.js version builded in commonjs to garantee module interoperability
@@ -300,5 +255,4 @@ router.get("/goa",passport.authenticate("google",{scope:[
 4. Typescript native module added to the package
 5. Custom message seters implemented
 6. Fixed mongoose connection error on ESM modules
-7. Added suport to people api to request more information
 Thanks for your time.

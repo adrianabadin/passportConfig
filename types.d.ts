@@ -58,14 +58,7 @@ export interface IgoogleUser {
     username:string,
     name?:string,
     lastName?:string,
-    avatar?:string,
-    age?:string,
-    birthdays?:string,
-    organizations?:[],
-    genders?:string,
-    adress?:string,
-    at?:string,
-    rt?:string,
+    avatar?:string
 }
 export interface IlocalSchema{
     username:string,
@@ -192,10 +185,9 @@ type peopleGendersType= [
     title: string
   }]
 export type basicUserType ={    
-name: string,
-lastname: string,
-age: number,
-
+nombre: string,
+apellido: string,
+edad: number,
 alias: string,
 avatar: string,
 username: string,

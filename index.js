@@ -80,8 +80,8 @@ function passportConfigBuilder(schemaObject, dbType) {
             return this;
         }
         function GoogleoAuth(authObject, loginOnly = false) {
-            const { justLogin, loginAndRegister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage);
-            passport.use(new GoogleStrategy(authObject, (loginOnly) ? justLogin : loginAndRegister));
+            const { justLogin, loginAndregister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage);
+            passport.use(new GoogleStrategy(authObject, (loginOnly) ? justLogin : loginAndregister));
             passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
                 done(null, yield user._id);
             }));

@@ -61,12 +61,7 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
 }
 function createNewUser(extendedData, profile) {
     return __awaiter(this, void 0, void 0, function* () {
-        let userData = {
-            username: profile._json.email,
-            name: profile._json.given_name,
-            lastname: profile._json.family_name,
-            avatar: profile._json.picture
-        };
+        let userData;
         if (extendedData.status = 200) {
             const switchObject = {
                 genders: (field) => {
@@ -84,6 +79,12 @@ function createNewUser(extendedData, profile) {
                 },
                 organizations: (field) => field
             };
+            userData = {
+                username: profile._json.email,
+                nombre: profile._json.given_name,
+                apellido: profile._json.family_name,
+                avatar: profile._json.picture
+            };
             Object.keys(extendedData.data).forEach((field) => {
                 const fieldData = field;
                 if (switchObject[fieldData] !== undefined) {
@@ -91,10 +92,18 @@ function createNewUser(extendedData, profile) {
                     if (getData !== undefined) {
                         userData = Object.assign(Object.assign({}, userData), { [fieldData]: getData });
                         if (fieldData === "birthdays")
-                            userData = Object.assign(Object.assign({}, userData), { age: calcularEdad(getData) });
+                            userData = Object.assign(Object.assign({}, userData), { edad: calcularEdad(getData) });
                     }
                 }
             });
+        }
+        else {
+            userData = {
+                username: profile._json.email,
+                nombre: profile._json.given_name,
+                apellido: profile._json.family_name,
+                avatar: profile._json.picture
+            };
         }
         return userData;
     });
