@@ -1,10 +1,20 @@
 import { Models, SchemaDefinition } from "mongoose";
 import { Knex } from "knex";
-// type AuthObjectType ={
-//     clientID:string,
-//   clientSecret: string,
-//   callbackURL:string
-// }
+import { Number,Union,List } from 'ts-toolbelt';
+//export type isBisiesto<Y extends List.Flatten<Number.Range<1900,2200>,0>[0]>= Y extends (infer ) ;
+
+// export type dateType<Y extends number,M extends List.Flatten<Number.Range<1,12>,0>[0],D extends number> = M extends 1|3|5|7|8|10|12  
+//   ? List.Flatten<Number.Range<0,31>,0>[0] 
+//   : M extends 4|6|9|11 
+//     ? List.Flatten<Number.Range<0,30>,0>[0] 
+//     : M extends 2
+//     ? (Y % 4 extends 0 ? List.Flatten<Number.Range<1, 29>, 0>[0] : List.Flatten<Number.Range<1, 28>, 0>[0])
+//     : never;
+      
+
+export type monthWith30Days = List.Flatten<Number.Range<0,31>,0>[0]
+
+
 interface IpassportConfigBuilderReturn {
     buildLocalConfig:()=>IpassportConfigBuilderReturn, 
     setCrypt:(value:boolean)=>IpassportConfigBuilderReturn,
@@ -48,7 +58,14 @@ export interface IgoogleUser {
     username:string,
     name?:string,
     lastName?:string,
-    avatar?:string
+    avatar?:string,
+    age?:string,
+    birthdays?:string,
+    organizations?:[],
+    genders?:string,
+    adress?:string,
+    at?:string,
+    rt?:string,
 }
 export interface IlocalSchema{
     username:string,
@@ -121,21 +138,102 @@ export type DbType="MONGO"|"SQL"
 export type SchemaType="goaSchema" |"localSchema"
 export type authorizationTypes= "birthdays" | "phoneNumbers"| "addresses"|"genders"|"organizations"|""
 export interface IAuthorizationScopes {
+
+    "https://www.googleapis.com/auth/user.emails.read"?:"emails"
     "https://www.googleapis.com/auth/user.birthday.read"?:"birthdays",
     "https://www.googleapis.com/auth/user.phonenumbers.read"?:"phoneNumbers",
     "https://www.googleapis.com/auth/user.addresses.read"?:"addresses",
     "https://www.googleapis.com/auth/user.gender.read"?:"genders",
     "https://www.googleapis.com/auth/user.organization.read":"organizations",
-    "openid":"",
-    "https://www.googleapis.com/auth/userinfo.profile":"",
-    "https://www.googleapis.com/auth/userinfo.email":""
+    
 }
 export interface IRequest extends Express.Request {
     authInfo?:{
         scopes?:string
     }
 }
-// trabajar luego con los callbacks 
-// interface IDone {
-//     done:(err?:Error,response?:any,flash:any)=>void
-// }
+
+type dateDayMonthType={date:{month:any,day:any}};
+type fullDateType ={date:{month:any,day:any,year:any}};
+type birthdaysType=Array<dateDayMonthType,fullDateType>;
+type peopleGendersType= [
+ 
+ {    metadata: {
+      primary: boolean,
+      source: { type: string, id: string }
+    },
+    value: 'male' |"female",
+    formattedValue: 'Male'|"Female"
+}]
+  type peopleBirthdaysType=[
+    {
+      metadata: {
+        primary: boole,
+        source: { type: 'PROFILE'|"ACCOUNT", id: string }
+      },
+      date: {year?:number, month: number, day: number }
+    },
+    {
+      metadata: { source: { type: "PROFILE"|'ACCOUNT', id: string } },
+      date: { year?: number, month: number, day: number }
+    }
+  ]
+  //type compositeDateType<Y extends number,M extends number, D extends number> = Y extends (Y / 4) extends number ?  :
+  type daysOfMonth= 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31
+  type monthsOfYear=1|2|3|4|5|6|7|8|9|10|11|12
+  type peopleOrganizationsType=[        {
+    metadata: { source: { type: 'PROFILE'|"ACCOUNT", id: string } },
+    type: string,
+    formattedType: string,
+    startDate: { year: number, month:monthsOfYear, day: daysOfMonth },
+    endDate: { year: number, month:monthsOfYear, day: daysOfMonth },
+    current: boolean,
+    name: string,
+    title: string
+  }]
+export type basicUserType ={    
+name: string,
+lastname: string,
+age: number,
+
+alias: string,
+avatar: string,
+username: string,
+password: string,
+isVerified: boolean
+}
+export type profileType={
+    id: string,
+    displayName: string,
+    name: { familyName: string, givenName: string },
+    emails: [ { value: string, verified:boolean } ],
+    photos: [
+      {
+        value: string
+      }
+    ],
+    provider: string,
+   _json: {
+      sub: string,
+      name: string,
+      given_name: string,
+      family_name: string,
+      picture: string,
+      email: string,
+      email_verified: boolean,
+      locale: 'es' | 'en',
+    }
+  }
+export type PeopleFieldsType = "genders"|"birthdays"|"organizations"|"resourceName"|"etag"
+export type PeopleDataType<T extends PeopleFieldsType> = 
+T extends "genders" 
+    ?  peopleGendersType
+    : T extends "birthdays"
+        ? peopleBirthdaysType
+        : T extends "organizations" 
+            ? peopleOrganizationsType 
+            : string   
+
+        
+
+

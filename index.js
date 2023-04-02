@@ -21,6 +21,7 @@ const { registerStrategy, loginStrategy } = require('./strategies/local');
 const oAuthModes = require('./strategies/oAuth2');
 ////////////////
 //SCHEMAS
+//SCOPES DE GOOGLEOAUTH 
 function passportConfigBuilder(schemaObject, dbType) {
     return __awaiter(this, void 0, void 0, function* () {
         //////////////////
@@ -79,17 +80,8 @@ function passportConfigBuilder(schemaObject, dbType) {
             return this;
         }
         function GoogleoAuth(authObject, loginOnly = false) {
-            const { justLogin, loginAndregister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage);
-            passport.use(new GoogleStrategy(Object.assign(Object.assign({}, authObject), { passReqToCallback: true, scope: [
-                    "openid",
-                    "profile",
-                    "email",
-                    "https://www.googleapis.com/auth/user.birthday.read",
-                    "https://www.googleapis.com/auth/user.phonenumbers.read",
-                    "https://www.googleapis.com/auth/user.addresses.read",
-                    "https://www.googleapis.com/auth/user.gender.read",
-                    "https://www.googleapis.com/auth/user.organization.read"
-                ] }), (loginOnly) ? justLogin : loginAndregister));
+            const { justLogin, loginAndRegister } = oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage);
+            passport.use(new GoogleStrategy(authObject, (loginOnly) ? justLogin : loginAndRegister));
             passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
                 done(null, yield user._id);
             }));

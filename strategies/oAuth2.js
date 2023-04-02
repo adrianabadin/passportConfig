@@ -31,60 +31,26 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
         }
     });
     //VERIFICAR LAS FUNCIONES DE LOGINREGISTER Y LUEGO VOLVER A VER APP.TS
-    const loginAndregister = (req, accessToken, _refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
-        const authorizationObject = {
-            "https://www.googleapis.com/auth/user.birthday.read": "birthdays",
-            "https://www.googleapis.com/auth/user.phonenumbers.read	": "phoneNumbers",
-            "https://www.googleapis.com/auth/user.addresses.read": "addresses",
-            "https://www.googleapis.com/auth/user.gender.read": "genders",
-            "https://www.googleapis.com/auth/user.organization.read": "organizations",
-            "openid": "",
-            "https://www.googleapis.com/auth/userinfo.profile": "",
-            "https://www.googleapis.com/auth/userinfo.email": ""
-        };
-        let urlFields = "";
-        const tokenInfo = yield axios_1.default.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
-        if ("data" in tokenInfo)
-            if ("scope" in tokenInfo.data) {
-                console.log("scopes exists");
-                tokenInfo.data.scope.split(" ").forEach((scope) => {
-                    if (authorizationObject[scope] !== "")
-                        urlFields += authorizationObject[scope] + ",";
-                });
-                urlFields = urlFields.substring(0, urlFields.length);
-            }
-        console.log(urlFields);
-        const extendedData = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${email.id}?personFields=${urlFields}&access_token=${accessToken}`);
-        console.log(extendedData.data, Object.keys(extendedData.data));
-
+    const loginAndRegister = (accessToken, refreshToken, _profile, email, cb) => __awaiter(this, void 0, void 0, function* () {
         try {
             const resultado = yield DAOgoa.findByUserName(email.emails[0].value);
             loggerHLP_1.loggerObject.debug.debug({ level: "debug", method: "Login and Register GoogleoAuth", data: resultado });
             if (resultado) {
                 return cb(null, resultado);
             }
-            try {
-                const fields = yield DAOgoa.returnFields();
-                let newUser;
-                if (Array.isArray(fields))
-                    fields.forEach(field => {
-                        if (field in basicObject) {
-                            newUser = Object.assign(Object.assign({}, newUser), { [field]: basicObject[field] });
-                        }
-                        else if (req.body !== null) {
-                            newUser = Object.assign(Object.assign({}, newUser), { [field]: req.body[field] });
-                        }
-                    });
-                const peopleObject = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${resultado.id}?personFields=birthdays,genders&access_token=${accessToken}`);
-                console.log(peopleObject);
-                // aca va la logica que le pide al usuario los datoos a traves de la api people de google
-                const usercreated = yield DAOgoa.createUser(newUser);
-                return cb(null, usercreated);
-            }
-            catch (err) {
-                loggerHLP_1.loggerObject.error.error({ level: "error", method: "Login and Register GoogleoAuth", message: err });
-                return cb(err, null, { message: "Error creating user" });
-            }
+            else
+                try {
+                    const requestedFields = yield getScopeFields(accessToken);
+                    const extendedData = yield axios_1.default.get(`https://people.googleapis.com/v1/people/${email.id}?personFields=${requestedFields}&access_token=${accessToken}`);
+                    let newUser = yield createNewUser(extendedData, email);
+                    loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "New user created by Gooogle oAuth2", data: newUser });
+                    const usercreated = yield DAOgoa.createUser(Object.assign(Object.assign({}, newUser), { at: accessToken, rt: refreshToken }));
+                    return cb(null, usercreated);
+                }
+                catch (err) {
+                    loggerHLP_1.loggerObject.error.error({ level: "error", method: "Login and Register GoogleoAuth", message: err });
+                    return cb(err, null, { message: "Error creating user" });
+                }
         }
         catch (err) {
             loggerHLP_1.loggerObject.error.error({ level: "error", method: "Login and Register GoogleoAuth", message: err });
@@ -92,5 +58,79 @@ function oAuthModes(DAOgoa, DAOlocal, userNotFoundMessage) {
         }
     });
     return { justLogin, loginAndRegister };
+}
+function createNewUser(extendedData, profile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let userData = {
+            username: profile._json.email,
+            name: profile._json.given_name,
+            lastname: profile._json.family_name,
+            avatar: profile._json.picture
+        };
+        if (extendedData.status = 200) {
+            const switchObject = {
+                genders: (field) => {
+                    for (let i = 0; i < field.length; i++) {
+                        if ("value" in field[i])
+                            return field[i].value;
+                    }
+                },
+                birthdays: (field) => {
+                    for (let i = 0; i < field.length; i++) {
+                        if (field[i].date !== undefined)
+                            if (field[i].date["year"] !== undefined)
+                                return new Date(field[i].date.year, field[i].date.month - 1, field[i].date.day);
+                    }
+                },
+                organizations: (field) => field
+            };
+            Object.keys(extendedData.data).forEach((field) => {
+                const fieldData = field;
+                if (switchObject[fieldData] !== undefined) {
+                    const getData = switchObject[fieldData](extendedData.data[field]);
+                    if (getData !== undefined) {
+                        userData = Object.assign(Object.assign({}, userData), { [fieldData]: getData });
+                        if (fieldData === "birthdays")
+                            userData = Object.assign(Object.assign({}, userData), { age: calcularEdad(getData) });
+                    }
+                }
+            });
+        }
+        return userData;
+    });
+}
+function calcularEdad(fechaNacimiento) {
+    var hoy = new Date();
+    var fechaNac = new Date(fechaNacimiento);
+    var edad = hoy.getFullYear() - fechaNac.getFullYear();
+    var mes = hoy.getMonth() - fechaNac.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+        edad--;
+    }
+    return edad;
+}
+function getScopeFields(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const authorizationObject = {
+            "https://www.googleapis.com/auth/user.addresses.read": "addresses",
+            "https://www.googleapis.com/auth/user.birthday.read": "birthdays",
+            "https://www.googleapis.com/auth/user.emails.read": "emails",
+            "https://www.googleapis.com/auth/user.gender.read": "genders",
+            "https://www.googleapis.com/auth/user.organization.read": "organizations",
+            "https://www.googleapis.com/auth/user.phonenumbers.read": "phoneNumbers"
+        };
+        let urlFields = "";
+        const tokenInfo = yield axios_1.default.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`);
+        if ("data" in tokenInfo)
+            if ("scope" in tokenInfo.data) {
+                console.log("scopes exists");
+                tokenInfo.data.scope.split(" ").forEach((scope) => {
+                    if (authorizationObject[scope] !== undefined)
+                        urlFields += authorizationObject[scope] + ",";
+                });
+                urlFields = urlFields.substring(0, urlFields.length);
+            }
+        return urlFields;
+    });
 }
 module.exports = oAuthModes;
