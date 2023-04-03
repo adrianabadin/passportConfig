@@ -1,9 +1,6 @@
-import { Model, Models } from "mongoose"
-import { IAuthorizationScopes, IDAO, IRequest, PeopleDataType, PeopleFieldsType, authorizationTypes, basicUserType, profileType } from '../types';
+import { IAuthorizationScopes, IDAO, PeopleDataType, PeopleFieldsType, basicUserType, profileType } from '../types';
 import { loggerObject } from '../helper/loggerHLP';
 import axios, { AxiosResponse } from "axios"
-import {google} from "googleapis"
-import { datacatalog } from "googleapis/build/src/apis/datacatalog";
 
 function oAuthModes(DAOgoa:IDAO,
     DAOlocal:IDAO,

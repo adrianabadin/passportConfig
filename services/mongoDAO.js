@@ -103,11 +103,11 @@ class MongoDAO {
             let schema = new mongoose_1.Schema(dbConnectionObject.dbSchema);
             this.model = isLocal ? mongoose_1.default.model('localCollection', schema.add(basicSchema)) : mongoose_1.default.model("goaCollection", schema.add(gooogleOauthSchema));
         }
-        this.findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
+        this.findById = (id) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const response = yield this.model.findById(id);
                 loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findById", response });
-                cb(null, response);
+                return response;
             }
             catch (e) {
                 const error = e;

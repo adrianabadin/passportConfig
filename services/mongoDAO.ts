@@ -5,7 +5,7 @@ import { SchemaDefinition } from 'mongoose';
 
 export class MongoDAO implements IDAO{
   public model!:Model<any>  
-  public findById!:(id:string,cb:any)=>Promise<any>
+  public findById!:(id:string)=>Promise<any>
   public findByUserName!: (username:string)=>Promise<any>
   public createUser!:(user:any)=>Promise<any>
   public returnFields!: ()=>string[]|ErrorMessage
@@ -88,12 +88,12 @@ export class MongoDAO implements IDAO{
               
               this.model=isLocal ? mongoose.model('localCollection',schema.add(basicSchema)):mongoose.model("goaCollection",schema.add(gooogleOauthSchema))
             }
-            this.findById=async (id:string,cb:any):Promise<any> =>{
+            this.findById=async (id:string):Promise<any> =>{
                 
                try{
                    const response = await this.model.findById(id)
                    loggerObject.debug.debug({level:"debug",message:"findById",response})
-                   cb(null,response)
+                  return response
                   }catch(e:unknown | IfindByIdError)
                     {const error:IfindByIdError =e as IfindByIdError
                       loggerObject.error.error({level:"error",title:error.name==="CastError" 

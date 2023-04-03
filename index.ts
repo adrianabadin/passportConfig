@@ -1,6 +1,6 @@
 import { Models,Schema } from "mongoose"
 import { AuthenticateOptionsGoogle } from "passport-google-oauth20"
-import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject,  authorizationTypes } from './types';
+import {  IpassportConfigBuilderReturn, IlocalSchema, DbType, ImongoDB, IdbConnectionObject } from './types';
 import DAOSelector from './services/selectorDAO';
 import { loggerObject } from './helper/loggerHLP';
 const passport =require( 'passport')
@@ -67,9 +67,16 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
       loggerObject.debug.debug({level:"debug",message:"serializeUser",data:await user["_id"]})
       done(null,await user._id)
     })
+    
     passport.deserializeUser(async (id:string, done:any) => {
-     await DAOlocal.findById(id,done) //users.findById(id, done)
-    })
+      loggerObject.debug.debug({level: "debug",model1:DAOlocal.model,model2:DAOgoa.model})
+        let data =await DAOlocal.findById(id) //users.findById(id, done)
+      if (data) done(null,data)
+      else data=await DAOgoa.findById(id,done) //users.findById(id, done)
+      
+      done(null,data)
+      })
+ 
     loginStrategy(DAOlocal,userNotFoundMessage,incorrectPasswordMessage,isValid,notVerifiedMessage)
     return this
   }
@@ -80,10 +87,13 @@ async function passportConfigBuilder (schemaObject:Schema<IlocalSchema>|ImongoDB
     passport.serializeUser(async (user:Models, done:any) => {
       done(null,await user._id)
     })
-    passport.deserializeUser((id:string, done:any) => {
-     if (loginOnly){DAOlocal.findById(id,done)}
-     else {DAOgoa.findById(id,done)}
-    })
+    passport.deserializeUser(async (id:string, done:any) => {
+      loggerObject.debug.debug({level: "debug",model1:DAOlocal.model,model2:DAOgoa.model})
+        let data =await DAOlocal.findById(id) //users.findById(id, done)
+      if (data) done(null,data)
+      else {data=await DAOgoa.findById(id,) //users.findById(id, done)
+      done(null,data)}
+      })
     return this
   }
   return { buildLocalConfig, setCrypt, GoogleoAuth,setUserNotFoundMessage,setIncorrectPassword,setUserAlrreadyExistsMessage,hasVerification,setNotVerifiedMessage,localModel:DAOlocal.model,goaModel:DAOgoa.model }

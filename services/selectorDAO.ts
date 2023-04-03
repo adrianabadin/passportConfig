@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { DbType, IDAO, IDAOSelector, IdbConnectionObject, IgoogleUser, IlocalSchema, ImongoDB, SchemaType } from '../types';
+import { DbType, IdbConnectionObject, IgoogleUser, IlocalSchema, ImongoDB, SchemaType } from '../types';
 //const MongoDAO=require('./mongoDAO')
 import {MongoDAO} from './mongoDAO'
 import mongoose from 'mongoose';

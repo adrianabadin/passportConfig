@@ -217,13 +217,12 @@ class SqlDAO {
         catch (error) {
             loggerHLP_1.loggerObject.error.error({ level: "error", title: "Error verifing table structure", message: `${error}` });
         }
-    }), model = db((schemaType === "localSchema") ? "users" : "goa"), findById = (id, cb) => __awaiter(this, void 0, void 0, function* () {
+    }), model = db((schemaType === "localSchema") ? "users" : "goa"), findById = (id) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield verifyTableStructure((schemaType === "localSchema") ? "users" : "goa");
-            yield db((schemaType === "localSchema") ? "users" : "goa").where("_id", `${id}`).select("*").then((response) => {
+            return yield db((schemaType === "localSchema") ? "users" : "goa").where("_id", `${id}`).select("*").then((response) => {
                 loggerHLP_1.loggerObject.debug.debug({ level: "debug", message: "findById", data: response, DAOName: "SqlDAO" });
-                cb(null, response);
-            }).catch((error) => cb(error));
+            }).catch((error) => loggerHLP_1.loggerObject.error.error({ level: "error", message: "Error retriving data", function: "findByID SQL", error }));
         }
         catch (e) {
             loggerHLP_1.loggerObject.error.error({ level: "error", message: `${e}` });

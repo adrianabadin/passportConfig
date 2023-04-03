@@ -167,15 +167,15 @@ class SqlDAO implements IDAO {
     },
     
     public model = db((schemaType==="localSchema")?"users":"goa"),
-    public findById=async (id:string,cb:any):Promise<any> =>{
+    public findById=async (id:string):Promise<any> =>{
         
         try {
         await verifyTableStructure((schemaType==="localSchema") ?"users":"goa")               
     
-        await db((schemaType==="localSchema")?"users":"goa").where("_id",`${id}`).select("*").then((response:any)=>{
+       return await db((schemaType==="localSchema")?"users":"goa").where("_id",`${id}`).select("*").then((response:any)=>{
             loggerObject.debug.debug({level:"debug",message:"findById",data:response,DAOName:"SqlDAO"})    
-            cb(null,response)
-        }).catch((error:any)=>cb(error))
+
+        }).catch((error:any)=>loggerObject.error.error({level:"error",message:"Error retriving data",function:"findByID SQL",error}))
     }catch(e){loggerObject.error.error({level:"error",message:`${e}`})}
 
     },

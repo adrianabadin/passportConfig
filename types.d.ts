@@ -75,7 +75,7 @@ export interface IlocalSchema{
 }
 export interface IDAO {
 model:Model<any>,
-findById: (id:string,cb:any)=>Promise<any>,
+findById: (id:string)=>Promise<any>,
 findByUserName:(userName:string)=>Promise<any>,
 createUser:(user:any)=>Promise<any>
 returnFields:() => string[]|ErrorMessage|Promise<string[]|ErrorMessage>

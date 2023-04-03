@@ -74,7 +74,13 @@ function passportConfigBuilder(schemaObject, dbType) {
                 done(null, yield user._id);
             }));
             passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
-                yield DAOlocal.findById(id, done); //users.findById(id, done)
+                loggerHLP_1.loggerObject.debug.debug({ level: "debug", model1: DAOlocal.model, model2: DAOgoa.model });
+                let data = yield DAOlocal.findById(id); //users.findById(id, done)
+                if (data)
+                    done(null, data);
+                else
+                    data = yield DAOgoa.findById(id, done); //users.findById(id, done)
+                done(null, data);
             }));
             loginStrategy(DAOlocal, userNotFoundMessage, incorrectPasswordMessage, isValid, notVerifiedMessage);
             return this;
@@ -85,14 +91,16 @@ function passportConfigBuilder(schemaObject, dbType) {
             passport.serializeUser((user, done) => __awaiter(this, void 0, void 0, function* () {
                 done(null, yield user._id);
             }));
-            passport.deserializeUser((id, done) => {
-                if (loginOnly) {
-                    DAOlocal.findById(id, done);
-                }
+            passport.deserializeUser((id, done) => __awaiter(this, void 0, void 0, function* () {
+                loggerHLP_1.loggerObject.debug.debug({ level: "debug", model1: DAOlocal.model, model2: DAOgoa.model });
+                let data = yield DAOlocal.findById(id); //users.findById(id, done)
+                if (data)
+                    done(null, data);
                 else {
-                    DAOgoa.findById(id, done);
+                    data = yield DAOgoa.findById(id); //users.findById(id, done)
+                    done(null, data);
                 }
-            });
+            }));
             return this;
         }
         return { buildLocalConfig, setCrypt, GoogleoAuth, setUserNotFoundMessage, setIncorrectPassword, setUserAlrreadyExistsMessage, hasVerification, setNotVerifiedMessage, localModel: DAOlocal.model, goaModel: DAOgoa.model };
